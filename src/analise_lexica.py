@@ -1,11 +1,14 @@
 from src.Exceptions import *
 
 def checagem_caracteres(arquivo):
+    qtd_linhas = 0
     caracteres_validos = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890(){}=<>!+-*/\n; "
+
     for linha in arquivo:
+        qtd_linhas += 1
         for caracter in linha:
             if (caracter not in caracteres_validos):
-                return "Error de analise lexica: caracter '"+caracter + "' não reconhecido pela linguagem."
+                return "Error de análise léxica: caracter '"+caracter + "' não reconhecido pela linguagem na linha: " + str(qtd_linhas)
     return True
 
 def remover_formatacao(arquivo):

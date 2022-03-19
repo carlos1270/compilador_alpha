@@ -1,4 +1,3 @@
-from Exceptions import AnaliseLexicaExeception
 from src.Exceptions import AnaliseLexicaExeception
 from src.analise_lexica import analise_lexica
 

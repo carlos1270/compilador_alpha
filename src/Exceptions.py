@@ -7,4 +7,4 @@ class AnaliseLexicaExeception(Exception):
         super().__init__(message)
 
     def get_message(self):
-        return self.message
+        return super().__str__()

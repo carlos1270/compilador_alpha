@@ -1,1 +1,6 @@
-inteiroteste=1;se$(teste==1etrue){exibe(5);}
+inteiro teste=1;
+
+
+se $(teste==1etrue) {
+    exibe(5);
+}
