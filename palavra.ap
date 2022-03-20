@@ -1,9 +1,6 @@
+inteiro 2este=1;
 
-
-                            inteiro teste=1;
-
-
-se    (teste==1etrue) {
+se (teste==1etrue) {
     exibe(5);
 }                  
 
