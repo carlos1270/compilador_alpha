@@ -1,6 +1,6 @@
 inteiro teste=1;
 
 
-se $(teste==1etrue) {
+se (teste==1etrue) {
     exibe(5);
 }

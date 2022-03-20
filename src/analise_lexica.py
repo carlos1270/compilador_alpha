@@ -27,18 +27,45 @@ def remover_formatacao(arquivo):
 
     return arquivo_final
 
+def processar_caractere(caractere_atual, caractere_proximo):
+    incremento = 1
+    if(caractere_atual == '=' and caractere_proximo == '='):
+        retorno = "|==|"
+        incremento = 2
+    else:
+        retorno = "|"+caractere_atual+"|"
+    return [retorno, incremento]
+
+def adicionar_pipes(texto):
+    caracteres = "(){}=<>!+-*/;"
+    nova_linha = ""
+    i = 0
+    while(i < len(texto)-1):
+        if (texto[i] in caracteres):
+            retorno = processar_caractere(texto[i], texto[i+1])
+            nova_linha += retorno[0]
+            i += retorno[1]
+        else:
+            nova_linha += texto[i]
+            i+=1
+    if(len(texto)-1 >= 0):
+        nova_linha += texto[len(texto)-1]
+
+    nova_linha = nova_linha.replace("|||", "|")
+    nova_linha = nova_linha.replace("||", "|")
+    return nova_linha
+
 def analise_lexica(caminho_arquivo):
-    tabela_tokens = []
-    token = ""
-    arquivo = open(caminho_arquivo)
-    checagem = checagem_caracteres(arquivo)
+    arquivo = open(caminho_arquivo, "r")
+    texto_arquivo = arquivo.read()
+    arquivo.close()
+    checagem = checagem_caracteres(texto_arquivo)
     if (checagem == True):
-        linha = remover_formatacao(arquivo)
-        """ for i in range(len(linha.split("|"))):
-        adicionar_token(tabela_tokens, linha.split("|")[i]) """
+        linha = remover_formatacao(texto_arquivo)
+        linha_separada = adicionar_pipes(linha)
+        tabela_tokens = linha_separada.split("|")
 
     else:
-        arquivo.close()
         raise AnaliseLexicaExeception(checagem)
     
     return tabela_tokens
