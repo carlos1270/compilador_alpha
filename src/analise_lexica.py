@@ -25,7 +25,7 @@ def remover_formatacao(arquivo):
             else:
                 linha_unica += linha[i]
         if (linha[len(linha)-1] != " " and linha[len(linha)-1] != "\n" and linha[len(linha)-1] != "\t" and linha[len(linha)-1] != "\r"):
-            linha_unica += "|$"+str([len(linha)-1])+"|"
+            linha_unica += "|"+linha[len(linha)-1]
     
     if(len(linha_unica) > 0):
         if(linha_unica[len(linha_unica)-1] == "|"):
