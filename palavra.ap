@@ -1,6 +1,11 @@
-inteiro teste=1;
 
 
-se (teste==1etrue) {
+                            inteiro teste=1;
+
+
+se    (teste==1etrue) {
     exibe(5);
-}
+}                  
+
+
+             

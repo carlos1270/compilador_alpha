@@ -13,24 +13,41 @@ def checagem_caracteres(arquivo):
 
 def remover_formatacao(arquivo):
     linha_unica = ""
+    qtd_linhas = 1
     for linha in arquivo:
-        for letra in linha:
-            if (letra == " " or letra == "\n" or letra == "\t" or letra == "\r"):
-                linha_unica += "|"
+        linha_unica += ""
+        linha_unica += "|$"+str(qtd_linhas)+"|"
+        qtd_linhas += 1
+        for i in range(len(linha)-1):
+            if (linha[i] == " " or linha[i] == "\n" or linha[i] == "\t" or linha[i] == "\r"):
+                if((linha[i+1] != " ") and (linha[i+1] != "\n") and (linha[i+1] != "\t") and (linha[i+1] != "\r")):
+                    linha_unica += "|"
             else:
-                linha_unica += letra
+                linha_unica += linha[i]
+        if (linha[len(linha)-1] != " " and linha[len(linha)-1] != "\n" and linha[len(linha)-1] != "\t" and linha[len(linha)-1] != "\r"):
+            linha_unica += "|$"+str([len(linha)-1])+"|"
+    
+    if(len(linha_unica) > 0):
+        if(linha_unica[len(linha_unica)-1] == "|"):
+            linha_unica = linha_unica[:len(linha_unica)-1]
 
-    arquivo_final = ""
-    for i in range(len(linha_unica)):
-        if (not(linha_unica[i] == "|" and linha_unica[i+1] == "|")):
-            arquivo_final += linha_unica[i]
+    #print(linha_unica)
 
-    return arquivo_final
+    return linha_unica
 
 def processar_caractere(caractere_atual, caractere_proximo):
     incremento = 1
     if(caractere_atual == '=' and caractere_proximo == '='):
         retorno = "|==|"
+        incremento = 2
+    elif(caractere_atual == '!' and caractere_proximo == '='):
+        retorno = "|!=|"
+        incremento = 2
+    elif(caractere_atual == '>' and caractere_proximo == '='):
+        retorno = "|>=|"
+        incremento = 2
+    elif(caractere_atual == '<' and caractere_proximo == '='):
+        retorno = "|<=|"
         incremento = 2
     else:
         retorno = "|"+caractere_atual+"|"
@@ -53,21 +70,37 @@ def adicionar_pipes(texto):
 
     nova_linha = nova_linha.replace("|||", "|")
     nova_linha = nova_linha.replace("||", "|")
+    if(len(nova_linha) > 0):
+        if(nova_linha[0] == '|'):
+            nova_linha = nova_linha[1:]
+
     return nova_linha
+
+def lista_tokens(lista):
+    linha = lista[0][1:]
+    lista_tokens = []
+    for i in range(1, len(lista)):
+        if(lista[i][0] == '$'):
+            linha = lista[i][1:]
+        else:
+            lista_tokens.append((lista[i], linha))
+    return lista_tokens
+
 
 def analise_lexica(caminho_arquivo):
     arquivo = open(caminho_arquivo, "r")
     texto_arquivo = arquivo.read()
-    arquivo.close()
     checagem = checagem_caracteres(texto_arquivo)
+    arquivo.close()
     if (checagem == True):
-        linha = remover_formatacao(texto_arquivo)
+        arquivo = open(caminho_arquivo, "r")
+        linha = remover_formatacao(arquivo)
+        arquivo.close()
         linha_separada = adicionar_pipes(linha)
-        tabela_tokens = linha_separada.split("|")
+        tabela_tokens = lista_tokens(linha_separada.split("|"))
 
     else:
         raise AnaliseLexicaExeception(checagem)
-    
     return tabela_tokens
 
                 
