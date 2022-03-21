@@ -91,7 +91,7 @@ def bloco():
 def declaracao_de_constante():
     global token 
     token_local = token
-    if (tipo() and definicao_constante()):
+    if (tipo() and definicao_constante() and ponto_virgula()):
         return True
     else:
         raise DeclaracaoDeConstateException("Constante '" + token_local[0] + "' declarada de forma inválida na linha " + token_local[1])
