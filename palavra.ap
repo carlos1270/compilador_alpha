@@ -1,8 +1,7 @@
-inteiro 2este=1;
+prog ads2a;
 
-se (teste==1etrue) {
-    exibe(5);
-}                  
+    const inteiro 2este=1;
 
-
-             
+    se (teste==1etrue) {
+        exibe(5);
+    }            

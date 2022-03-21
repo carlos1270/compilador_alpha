@@ -1,4 +1,5 @@
 from distutils import extension
+from pydoc import classname
 from shutil import ExecError
 
 class CustomizeExeception(Exception):
@@ -14,7 +15,7 @@ class AnaliseLexicaExeception(CustomizeExeception):
 
 class AnaliseSintaticaExeception(CustomizeExeception):
     def __init__(self, message):
-        super().__init__("Erro de análise sintática:" + message)
+        super().__init__("Erro de análise sintática: " + message)
 
 class EsperaPontoVirgulaExeception(AnaliseSintaticaExeception):
     def __init__(self, message):
@@ -25,5 +26,29 @@ class IdentificadorInvalidoExeception(AnaliseSintaticaExeception):
         super().__init__(message)
 
 class ProgramaSemIdentificadorExeception(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class TipoConstanteInvalidoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+    
+class DeclaracaoDeConstateException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class EsperadoAtribuicaoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ConstanteInvalidaException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class NumeroInteiroInvalidoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class BooleanoInvalidoException(AnaliseSintaticaExeception):
     def __init__(self, message):
         super().__init__(message)
