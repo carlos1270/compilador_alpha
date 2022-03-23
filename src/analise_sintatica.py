@@ -157,7 +157,6 @@ def atribuicao():
         raise EsperadoAtribuicaoException("Esperado '=' ao invés de '" + token[0] + "' na linha " + token[1])
 
 def constante():
-    """ Checar [+|-] e (<identificador> | <número inteiro> | <booleano>) na gramática """
     global token
     token_local = token
 
@@ -194,7 +193,11 @@ def booleano(opcional=False):
             raise BooleanoInvalidoException("Booleano '" + token[0] + "' inválido na linha " + token[1])
 
 def declaracao_de_variavel():
-    """ Code """
+    if (identificador()):
+        return True
+    else:
+        return False
+
 
 def declaracao_de_sub_rotina():
     """ Code """
