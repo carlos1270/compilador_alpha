@@ -1,7 +1,9 @@
+from src.Simbolo import Simbolo
 from src.Exceptions import *
 
-def init(lista_tokens):
-    global token, i_token, lista, pilha
+def init(lista_tokens, tabela_simbolos):
+    global token, i_token, lista, pilha, simbolos
+    simbolos = tabela_simbolos
     pilha = []
     pilha.append(("^", '-1'))
     i_token = 0
@@ -10,7 +12,12 @@ def init(lista_tokens):
 
 def ler_token():
     global i_token, lista
-    i_token += 1
+    if (i_token < len(lista) - 1):
+        i_token += 1
+
+    if (lista[i_token] == "$" or lista[i_token - 1] == "$"):
+        i_token -= 1
+        return lista[len(lista) - 1]
     return lista[i_token]
 
 def ler_proximo_token():
@@ -22,18 +29,42 @@ def voltar_token():
     global i_token
     i_token -= 1
 
-def analise_sintatica(lista_tokens):
-    init(lista_tokens)
+def analise_sintatica(lista_tokens, tabela_simbolos):
+    init(lista_tokens, tabela_simbolos)
     resultado = programa()
     return resultado
 
-def programa():
-    global token
-    if (token[0] == 'prog'):
-        if (identificador()):
-            if (ponto_virgula()):
-                bloco()
+def tipo_valido(token):
+    tipos = ['inteiro', 'booleano']
 
+    for i in range(len(tipos)):
+        if (tipos[i] == token[0]):
+            return True
+    
+    return False
+
+def adicionar_simbolo(simbolo, token):
+    global simbolos
+    simbolo_ja_adicionado = False
+    for i in range(len(simbolos)):
+        if (simbolos[i].identificador == token[0]):
+            simbolo_ja_adicionado = True
+    
+    if (not(simbolo_ja_adicionado)):
+        simbolos.append(simbolo)
+
+def criar_simbolo(token):
+    simbolo = Simbolo(token[0], linha=token[1])
+    
+    if (simbolo.identificador != "#"):
+        if (tipo_valido(lista[i_token - 1])):
+            simbolo.tipo = lista[i_token - 1][0]
+            adicionar_simbolo(simbolo, token)
+
+def programa():
+    global token, simbolos
+    if (token[0] == 'prog' and identificador() and ponto_virgula() and bloco()):
+        return simbolos
     else: 
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
@@ -50,7 +81,8 @@ def identificador(opcional=False):
                 return False
             else: 
                 raise IdentificadorInvalidoExeception("Identificador '" + token[0] + "' inválido na linha " + token[1])
-                
+
+    criar_simbolo(token)
     return True
 
 def letra(letra):
@@ -77,15 +109,20 @@ def ponto_virgula():
 
 def bloco():
     token = ler_token()
+    
+    if (token[0] == '$'):
+        return True
 
     if (token[0] == 'const'):
-        return declaracao_de_constante()
+        declaracao_de_constante()
     elif(token[0] == 'inteiro' or token[0] == 'booleano'):
-        return declaracao_de_variavel()
+        declaracao_de_variavel()
     elif(token[0] == 'func'):
-        return declaracao_de_sub_rotina()
+        declaracao_de_sub_rotina()
     else:
-        return comando()
+        comando()
+    
+    return bloco() 
 
 
 def declaracao_de_constante():
@@ -112,7 +149,7 @@ def definicao_constante():
         return False
 
 def atribuicao():
-    token = ler_token
+    token = ler_token()
 
     if (token[0] == '='):
         return True

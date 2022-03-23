@@ -1,6 +1,7 @@
 prog ads2a;
 
-    const inteiro 2este=1;
+    const inteiro teste = 1;
+    const booleano a = 2;
 
     se (teste==1etrue) {
         exibe(5);

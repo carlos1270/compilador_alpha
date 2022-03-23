@@ -2,12 +2,16 @@ from src.Exceptions import AnaliseLexicaExeception, AnaliseSintaticaExeception
 from src.analise_lexica import analise_lexica
 from src.analise_sintatica import analise_sintatica
 
-global tabela_identificadores
-tabela_identificadores = []
+global tabela_simbolos
+tabela_simbolos = []
 
 try:
     tabela_tokens = analise_lexica("palavra.ap")
-    arvore_sintatica = analise_sintatica(tabela_tokens)
+    tabela_tokens.append(('$', '-1'))
+    tabela_simbolos = analise_sintatica(tabela_tokens, tabela_simbolos)
+    
+    for i in tabela_simbolos:
+        print(i.identificador)
 except AnaliseLexicaExeception as e:
     print(e.get_message())
 except AnaliseSintaticaExeception as e:

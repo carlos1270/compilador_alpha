@@ -1,7 +1,3 @@
-from distutils import extension
-from pydoc import classname
-from shutil import ExecError
-
 class CustomizeExeception(Exception):
     def __init__(self, message):
         super().__init__(message)
