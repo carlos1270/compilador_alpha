@@ -3,6 +3,10 @@ prog ads2a;
     const inteiro teste = 1;
     const booleano a = 2;
 
-    se (teste==1etrue) {
-        exibe(5);
-    }            
+    func vazio teste() {
+        booleano b;
+    }  
+
+    func vazio testa(inteiro a, inteiro b) {
+        booleano b;
+    }       

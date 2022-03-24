@@ -2,7 +2,7 @@ from src.Exceptions import *
 
 def checagem_caracteres(arquivo):
     qtd_linhas = 0
-    caracteres_validos = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890(){}=<>!+-*/\n; "
+    caracteres_validos = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890(){}=<>!+-*/\n;, "
 
     for linha in arquivo:
         qtd_linhas += 1
@@ -54,7 +54,7 @@ def processar_caractere(caractere_atual, caractere_proximo):
     return [retorno, incremento]
 
 def adicionar_pipes(texto):
-    caracteres = "(){}=<>!+-*/;"
+    caracteres = "(){}=<>!+-*/;,"
     nova_linha = ""
     i = 0
     while(i < len(texto)-1):

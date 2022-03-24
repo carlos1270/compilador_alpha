@@ -48,3 +48,23 @@ class NumeroInteiroInvalidoException(AnaliseSintaticaExeception):
 class BooleanoInvalidoException(AnaliseSintaticaExeception):
     def __init__(self, message):
         super().__init__(message)
+
+class TipoDeSubRotinaInvalidaException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class EsperadoParentesesExeception(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class EsperadoChavesExeception(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class EsperadoChavesExeception(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ComandoNaoIdentificadoExecption(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
