@@ -68,3 +68,27 @@ class EsperadoChavesExeception(AnaliseSintaticaExeception):
 class ComandoNaoIdentificadoExecption(AnaliseSintaticaExeception):
     def __init__(self, message):
         super().__init__(message)
+
+class ExpressaoBooleanaInvalidaExecption(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class OperadorInvalidoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ComandoCondicionalIfException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class TermoInvalidoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class NaoEhPermitidaDeclaracaoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class PalavrasReservadasComandoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)

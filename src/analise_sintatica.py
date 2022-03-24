@@ -1,4 +1,6 @@
 from pickletools import read_uint1
+from threading import local
+from tkinter.tix import Tree
 from src.Simbolo import Simbolo
 from src.Exceptions import *
 
@@ -10,6 +12,25 @@ def init(lista_tokens, tabela_simbolos):
     i_token = 0
     lista = lista_tokens
     token = lista_tokens[i_token]
+
+def checar_comando_atribuicao(token):
+    if ((token[0] == 'booleano') or (token[0] == 'inteiro') or (token[0] == 'const')):
+        raise NaoEhPermitidaDeclaracaoException("Não é permitida declarações dentro de comandos, declaração '" + token[0] +"' na linha " + token[1])
+    elif (palavras_reservada(token)):
+        raise PalavrasReservadasComandoException("Palavras reservadas não permitidas para o comando de atribuição, palavra '" + token[0] + "' na linha " + token[1])
+
+
+def palavras_reservada(token):
+
+    palavras_reservadas = [
+        'booleano', 'inteiro', 'verdadeiro', 'falso', 'nao', 'e', 'ou', 'func', 'prog'
+    ]
+
+    for palavra in palavras_reservadas:
+        if (palavra == token[0]):
+            return True
+    
+    return False
 
 def ler_token():
     global i_token, lista
@@ -80,10 +101,13 @@ def programa():
     else: 
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
-def identificador(token=None, opcional=False, tipo=None):
+def identificador(token=None, opcional=False, tipo=None, comando=False):
     if (token == None):
         token = ler_token()
-    print(token[0])
+
+    if (comando):
+        checar_comando_atribuicao(token)
+
     for i in range(len(token[0])):
         if (i == 0 and letra(token[0][i])):
             continue
@@ -190,7 +214,7 @@ def constante():
     global token
     token_local = token
 
-    if (identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)):
+    if (booleano(opcional=True) or numero_inteiro(opcional=True) or identificador(opcional=True)):
         return True
     else:
         raise ConstanteInvalidaException("Constante '" + token_local[0] + "' inválida na linha " + token_local[1])
@@ -225,6 +249,7 @@ def booleano(opcional=False):
 def declaracao_de_variavel():
     global token
     if (identificador()):
+        print("edclaração" + token[0])
         if (ponto_virgula()):
             return True
         else:
@@ -339,7 +364,7 @@ def comando(token=None):
         if (prox_eh_comando()):
             return comando()
 
-    elif (identificador(token=token)):
+    elif (identificador(token=token, comando=True)):
         comando_de_atribuicao()
         if (prox_eh_comando()):
             return comando()
@@ -349,7 +374,106 @@ def comando(token=None):
     return True
 
 def comando_condicional_if():
-    """ Code """
+    global token
+    local_token = token
+
+    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and comando() and fecha_chaves()):
+
+        proximo_token = ler_proximo_token()
+
+        if(proximo_token[0] == 'senao'):
+            proximo_token = ler_token()
+            return comando_condicional_else()
+        else:
+            return True
+    else:
+        raise ComandoCondicionalIfException("Comando condicional '" + local_token[0] + "' inválido na linha " + local_token[1])
+        
+
+def operador_opcional(token=None):
+    if (token == None):
+        token = ler_token()
+
+    if (operador(token) and expressao_simples()):
+        token = ler_proximo_token()
+
+        if (token[0] == "e" or token[0] == "ou"):
+            return operador_opcional()
+        elif (token[0] == ")"):
+            return True
+        else:
+            raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
+
+def expressao_booleana(opcional=False):
+    global token
+    local_token = token
+
+    if (expressao_simples()):
+        token_opcional = ler_proximo_token()
+
+        if (token_opcional[0] == "e" or token_opcional[0] == "ou"):
+            return operador_opcional()
+    else:
+        if (opcional):
+            voltar_token()
+            return False
+        else:
+            raise ExpressaoBooleanaInvalidaExecption("Expressão booleana '" + local_token[0] + "' inválida na linha " + local_token[1])
+    
+    return True
+
+def expressao_simples():
+    token = ler_proximo_token()
+
+    if (token[0] == "nao"):
+        token = ler_token()
+        return termo()
+    else:
+        return termo()
+
+def termo():
+    global token
+    local_token = token
+
+    if (booleano(opcional=True) or identificador(opcional=True) or numero_inteiro(opcional=True) or expressao_booleana(opcional=True)):
+        proximo_token = ler_proximo_token()
+        
+        if (relacao(proximo_token)):
+            return relacao_opcional()
+        else:
+            return True
+    else:
+        raise TermoInvalidoException("Termo '" + local_token[0] + "' inválido na linha '" + local_token[1])
+
+def relacao_opcional(token=None):
+    if (token == None):
+        token = ler_token()
+
+    if (relacao(token) and termo()):
+        proximo_token = ler_proximo_token()
+        
+        if (relacao(proximo_token)):
+            return relacao_opcional()
+        else:
+            return True
+    else:
+        return True
+
+def relacao(token):
+    return (token[0] == "==") or (token[0] == "!=") or (token[0] == "<=") or (token[0] == ">=") or (token[0] == ">") or (token[0] == "<")
+
+def operador(token=None, opcional=False):
+    if (token == None):
+        token = ler_token()
+    
+    if (token[0] == "e" or token[0] == "ou"):
+        return True
+    else: 
+        if(opcional):
+            voltar_token()
+            return False
+        else:
+            raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
 
 def comando_condicional_else():
     """ Code """
@@ -373,4 +497,4 @@ def prox_eh_comando(token=None):
     if (token == None):
         token = ler_proximo_token()
 
-    return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token))
+    return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True))
