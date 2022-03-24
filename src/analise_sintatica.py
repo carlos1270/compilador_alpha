@@ -295,7 +295,15 @@ def fecha_parenteses():
         raise EsperadoParentesesExeception("Esperado ')' ao invés de '" + token[0] + "' na linha " + token[1])
 
 def declaracao_de_funcao():
-    """ Code """   
+    if (identificador(tipo='func') and abre_parenteses()):
+        token = ler_proximo_token()
+        if (token[0] == ')'):
+            token = ler_token()
+            return abre_chaves() and bloco(bloco_interno=True) and fecha_chaves()
+        elif(parametros_formais() and fecha_parenteses()):
+            return abre_chaves() and bloco(bloco_interno=True) and fecha_chaves()
+    else:
+        return False
 
 def comando(token=None):
     if (token == None):

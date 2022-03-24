@@ -7,6 +7,6 @@ prog ads2a;
         booleano b;
     }  
 
-    func vazio testa(inteiro a, inteiro b) {
+    func inteiro testa(inteiro a, inteiro b) {
         booleano b;
     }       
