@@ -10,6 +10,7 @@ try:
     tabela_tokens.append(('$', '-1'))
     print(tabela_tokens)
     tabela_simbolos = analise_sintatica(tabela_tokens, tabela_simbolos)
+    print(tabela_simbolos)
     for i in tabela_simbolos:
         print(i.identificador)
 except AnaliseLexicaExeception as e:
