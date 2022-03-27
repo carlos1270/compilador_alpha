@@ -380,8 +380,7 @@ def comando(token=None):
     return True
 
 def comando_condicional_if():
-    global token
-    local_token = token
+    local_token = ler_token_atual()
 
     if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and comando() and fecha_chaves()):
 
@@ -422,7 +421,11 @@ def expressao_booleana(opcional=False):
     global lista, i_token
     local_token = lista[i_token]
 
-    if (expressao_simples(opcional)):
+    if(expressao_aritmetica(opcional=True)):
+        if (operador(opcional=True)):
+            return expressao_booleana(opcional=True)
+
+    elif (expressao_simples(opcional)):
         token_opcional = ler_proximo_token()
 
         if (token_opcional[0] == "e" or token_opcional[0] == "ou"):
@@ -482,6 +485,7 @@ def relacao_opcional(token=None):
         return True
 
 def relacao(token):
+    print('entrou relacao')
     return (token[0] == "==") or (token[0] == "!=") or (token[0] == "<=") or (token[0] == ">=") or (token[0] == ">") or (token[0] == "<")
 
 def operador(token=None, opcional=False):
@@ -510,7 +514,7 @@ def comando_condicional_else():
         raise ComandoCondicionalElseException("Comando condicional else'" + local_token[0] + "' inválido na linha " + local_token[1])
 
 def comando_de_laco_while():
-    """ Code """
+    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and comando() and fecha_chaves()
 
 def comando_de_retorno_de_valor():
     """ Code """
@@ -547,14 +551,27 @@ def eh_booleano():
         return True
     return False
 
+def eh_operador():
+    token = ler_token_atual()
+    if(token[0] == "e" or token[0] == "ou"):
+        return True
+    return False
+
 def expressao_aritmetica(opcional=False):
     token_atual = ler_token_atual()
     if(expressao_numerica()):
         token_opcional = ler_proximo_token()
         if (sinal(token_opcional)):
+            print('é sinal')
             ler_token()
             return expressao_aritmetica()
-        elif(token_opcional[0] == ";"):
+        elif(token_opcional[0] == ";"  or token_opcional[0] == ")"):
+            return True
+        elif(relacao(token_opcional[0])):
+            print('entrou relacao em aritimetica')
+            ler_token()
+            return expressao_aritmetica()
+        elif(operador(token=token_opcional, opcional=True)):
             return True
     else:
         if (opcional):
@@ -564,10 +581,18 @@ def expressao_aritmetica(opcional=False):
             raise ExpressaoAritmeticaInvalidaException("Expressão aritmética '" + token_atual[0] + "' feita de forma inválida na linha " + token_atual[1])
 
 def expressao_numerica():
-    if (identificador(opcional=True) or numero_inteiro(opcional=True)):
+    print('entrou para numerica')
+    token = ler_token_atual()
+    if(eh_booleano()):
+        return False
+    elif (identificador(opcional=True) or numero_inteiro(opcional=True)):
+        print('passou como expressao numerica')
         return True
     else:
-        raise ExpressaoNumericaInvalidaException("Expressão numérica '" + token[0] + "' feita de forma inválida na linha " + token[1])
+        if(relacao(token=token) or eh_operador()):
+            raise RelacaoAritmeticaInvalidaException("Esperado fim de expressao encontrado '" + token[0] + "' na linha "+token[1])
+        else:
+            raise ExpressaoNumericaInvalidaException("Expressão numérica '" + token[0] + "' feita de forma inválida na linha " + token[1])
 
 
 def sinal(token = None):

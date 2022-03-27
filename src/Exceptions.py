@@ -116,3 +116,7 @@ class ExpressaoAritmeticaInvalidaException(AnaliseSintaticaExeception):
 class ExpressaoInvalidaException(AnaliseSintaticaExeception):
     def __init__(self, message):
         super().__init__(message)
+
+class RelacaoAritmeticaInvalidaException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
