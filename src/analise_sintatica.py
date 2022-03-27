@@ -521,29 +521,22 @@ def comando_impressao_tela():
     """ Code """
 
 def comando_de_atribuicao():
-    global token
-    local_token = token
+    token_atual = ler_token_atual()
 
-    if (atribuicao() and identificador()):
-        prox_token = ler_proximo_token()
-        if (prox_token[0] == '('):
-            return chamada() and ponto_virgula()
-        else:
-            voltar_token()
-            if (expressao() and ponto_virgula()):
-                return True
+    if (atribuicao() and expressao() and ponto_virgula()):
+        return True
     else:
-        raise ComandoAtribuicaoException("Atribuição '" + local_token[0] + "' realizada de forma inválida na linha " + local_token[1])
+        raise ComandoAtribuicaoException("Atribuição '" + token_atual[0] + "' realizada de forma inválida na linha " + token_atual[1])
 
 def expressao():
-    global token
-    local_token = token
+    token_atual = ler_token_atual()
+
     if(expressao_booleana(opcional=True)):
         return True
     elif(expressao_aritmetica(opcional=True)):
         return True
     else:
-        raise ExpressaoInvalidaException("Expressão '" + local_token[0] + "' inválida na linha " + local_token[1])
+        raise ExpressaoInvalidaException("Expressão '" + token_atual[0] + "' inválida na linha " + token_atual[1])
 
 def eh_booleano():
     token = ler_token_atual()
@@ -570,10 +563,12 @@ def expressao_aritmetica(opcional=False):
             raise ExpressaoAritmeticaInvalidaException("Expressão aritmética '" + token_atual[0] + "' feita de forma inválida na linha " + token_atual[1])
 
 def expressao_numerica():
+    token_atual = ler_token_atual()
+
     if (identificador(opcional=True) or numero_inteiro(opcional=True)):
         return True
     else:
-        raise ExpressaoNumericaInvalidaException("Expressão numérica '" + token[0] + "' feita de forma inválida na linha " + token[1])
+        raise ExpressaoNumericaInvalidaException("Expressão numérica '" + token_atual[0] + "' feita de forma inválida na linha " + token_atual[1])
 
 
 def sinal(token = None):

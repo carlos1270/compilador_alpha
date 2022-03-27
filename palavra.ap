@@ -1,6 +1,6 @@
 prog ads2a;
     const booleano a = 1;
-    
+
     se(verdadeiro) {
-        a = b(teste, a);
+        a = nao verdadeiro e nao false;
     }       
