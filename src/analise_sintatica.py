@@ -321,6 +321,9 @@ def fecha_parenteses():
         raise EsperadoParentesesExeception("Esperado ')' ao invés de '" + token[0] + "' na linha " + token[1])
 
 def declaracao_de_funcao():
+
+    """ Faltando chamada do comando de retorno dentro do bloco da função """
+
     if (identificador(tipo='func') and abre_parenteses()):
         token = ler_proximo_token()
         if (token[0] == ')'):
@@ -521,19 +524,24 @@ def comando_de_atribuicao():
     global token
     local_token = token
 
-    if (expressao() and ponto_virgula()):
-        return True
+    if (atribuicao() and identificador()):
+        prox_token = ler_proximo_token()
+        if (prox_token[0] == '('):
+            return chamada() and ponto_virgula()
+        else:
+            voltar_token()
+            if (expressao() and ponto_virgula()):
+                return True
     else:
         raise ComandoAtribuicaoException("Atribuição '" + local_token[0] + "' realizada de forma inválida na linha " + local_token[1])
 
 def expressao():
     global token
     local_token = token
-    if (atribuicao()):
-        if(expressao_booleana(opcional=True)):
-            return True
-        elif(expressao_aritmetica(opcional=True)):
-            return True
+    if(expressao_booleana(opcional=True)):
+        return True
+    elif(expressao_aritmetica(opcional=True)):
+        return True
     else:
         raise ExpressaoInvalidaException("Expressão '" + local_token[0] + "' inválida na linha " + local_token[1])
 
@@ -589,3 +597,22 @@ def prox_eh_comando(token=None):
         return False
 
     return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True))
+
+def chamada():
+    return abre_parenteses() and secao_parametros_passados() and fecha_parenteses()
+
+def secao_parametros_passados():
+    if (identificador(opcional=True)):
+        token = ler_proximo_token()
+        if (token[0] == ')'):
+            return True
+        elif (token[0] == ','):
+            token = ler_token()
+            token = ler_proximo_token()
+            identificador(token=token)
+
+    token = ler_proximo_token()
+    if (token[0] == ')'):
+        return True
+
+    return secao_parametros_passados()
