@@ -342,13 +342,11 @@ def comando(token=None):
         #nao ha nada dentro do bloco do comando
         raise EsperadoComandoException("Esperado comando entre as {} encontrado '" + token[0] + "' na linha " + token[1])
 
+    elif (token[0] == 'senao'):
+        raise ComandoCondicionalElseException("Esperado comando 'se' predecedente a '" + token[0] + "' na linha " + token[1])
+
     elif (token[0] == 'se'):
         comando_condicional_if()
-        if (prox_eh_comando()):
-            return comando()
-
-    elif (token[0] == 'senao'):
-        comando_condicional_else()
         if (prox_eh_comando()):
             return comando()
 
@@ -500,7 +498,16 @@ def operador(token=None, opcional=False):
             raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
 
 def comando_condicional_else():
-    """ Code """
+    global token
+    local_token = token
+
+    if (abre_chaves() and comando() and fecha_chaves()):
+        if (prox_eh_comando()):
+            return comando()
+        else:
+            return True
+    else:
+        raise ComandoCondicionalElseException("Comando condicional else'" + local_token[0] + "' inválido na linha " + local_token[1])
 
 def comando_de_laco_while():
     """ Code """

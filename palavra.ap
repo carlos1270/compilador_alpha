@@ -1,4 +1,17 @@
 prog ads2a;
     se(verdadeiro) {
-        a = nao verdadeiro e nao verdadeiro carlos nao falso;
-    }       
+        a = 3*4;
+    }senao{
+        a = 2*4;
+        se(falso){
+            b = 8*3;
+        }
+        senao{
+            b = 8*2;
+            a = 2*4;
+            c = 2*4;
+        }
+        senao{
+            d = 2;
+        }
+    }

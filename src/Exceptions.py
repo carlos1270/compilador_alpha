@@ -81,6 +81,10 @@ class ComandoCondicionalIfException(AnaliseSintaticaExeception):
     def __init__(self, message):
         super().__init__(message)
 
+class ComandoCondicionalElseException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
 class TermoInvalidoException(AnaliseSintaticaExeception):
     def __init__(self, message):
         super().__init__(message)
