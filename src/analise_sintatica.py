@@ -107,7 +107,7 @@ def identificador(token=None, opcional=False, tipo=None, comando=False):
 
     if (comando):
         checar_comando_atribuicao(token)
-
+    
     for i in range(len(token[0])):
         if (i == 0 and letra(token[0][i])):
             continue
@@ -219,8 +219,9 @@ def constante():
     else:
         raise ConstanteInvalidaException("Constante '" + token_local[0] + "' inválida na linha " + token_local[1])
 
-def numero_inteiro(opcional=False):
-    token = ler_token()
+def numero_inteiro(token=None, opcional=False):
+    if(token == None):
+        token = ler_token()
 
     for i in range(len(token[0])):
         if (digito(token[0][i])):
@@ -333,8 +334,15 @@ def declaracao_de_funcao():
 def comando(token=None):
     if (token == None):
         token = ler_token() 
+    
+    if (token[0] == '$'):
+        return True
+    
+    elif(token[0] == '}'):
+        #nao ha nada dentro do bloco do comando
+        raise EsperadoComandoException("Esperado comando entre as {} encontrado '" + token[0] + "' na linha " + token[1])
 
-    if (token[0] == 'se'):
+    elif (token[0] == 'se'):
         comando_condicional_if()
         if (prox_eh_comando()):
             return comando()
@@ -399,51 +407,70 @@ def operador_opcional(token=None):
 
         if (token[0] == "e" or token[0] == "ou"):
             return operador_opcional()
-        elif (token[0] == ")"):
+        elif (token[0] == ")" or token[0] == ";"):
             return True
         else:
-            raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
+            if(token[0] == "nao"):
+                raise OperadorInvalidoException("Esperado operador 'e' ou 'ou' ao invés de '" + token[0] + "' na linha " + token[1])
+            else:
+                raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
+    
+def ler_token_atual():
+    global lista, i_token
+    local_token = lista[i_token]
+    return local_token
 
 def expressao_booleana(opcional=False):
-    global token
-    local_token = token
+    global lista, i_token
+    local_token = lista[i_token]
 
-    if (expressao_simples()):
+    if (expressao_simples(opcional)):
         token_opcional = ler_proximo_token()
+        print('token opcional '+ str(token_opcional))
 
         if (token_opcional[0] == "e" or token_opcional[0] == "ou"):
             return operador_opcional()
+        elif (token_opcional[0] == ')'):
+            print('retornar true')
+            return True
     else:
         if (opcional):
-            voltar_token()
             return False
         else:
             raise ExpressaoBooleanaInvalidaExecption("Expressão booleana '" + local_token[0] + "' inválida na linha " + local_token[1])
     
     return True
 
-def expressao_simples():
+def negacao():
     token = ler_proximo_token()
-
-    if (token[0] == "nao"):
-        token = ler_token()
-        return termo()
+    if(token[0] == "nao"):
+        ler_token()
+        return negacao()
     else:
-        return termo()
+        return True
 
-def termo():
-    global token
-    local_token = token
+def expressao_simples(opcional=False):
+    if (negacao()):
+        return termo(opcional)
+    return termo(opcional)
 
-    if (booleano(opcional=True) or identificador(opcional=True) or numero_inteiro(opcional=True) or expressao_booleana(opcional=True)):
+def termo(opcional=False):
+    global lista, i_token
+    local_token = lista[i_token]
+
+    if (booleano(opcional=True) or identificador(opcional=True)):
         proximo_token = ler_proximo_token()
         
         if (relacao(proximo_token)):
             return relacao_opcional()
         else:
+            print('termo verdadeiro')
             return True
     else:
-        raise TermoInvalidoException("Termo '" + local_token[0] + "' inválido na linha '" + local_token[1])
+        if(opcional):
+            return False
+        else:
+            raise TermoInvalidoException("Termo '" + local_token[0] + "' inválido na linha '" + local_token[1])
 
 def relacao_opcional(token=None):
     if (token == None):
@@ -491,10 +518,74 @@ def comando_impressao_tela():
     """ Code """
 
 def comando_de_atribuicao():
-    """ Code """
+    global token
+    local_token = token
+
+    if (expressao() and ponto_virgula()):
+        return True
+    else:
+        raise ComandoAtribuicaoException("Atribuição '" + local_token[0] + "' realizada de forma inválida na linha " + local_token[1])
+
+def expressao():
+    global token
+    local_token = token
+    if (atribuicao()):
+        if(expressao_booleana(opcional=True)):
+            return True
+        elif(expressao_aritmetica(opcional=True)):
+            return True
+    else:
+        raise ExpressaoInvalidaException("Expressão '" + local_token[0] + "' inválida na linha " + local_token[1])
+
+def eh_booleano():
+    token = ler_token_atual()
+    if(token[0] == "verdadeiro" or token[0] == "falso"):
+        return True
+    return False
+
+def expressao_aritmetica(opcional=False):
+    print('entrou aritmetica')
+    token_atual = ler_token_atual()
+    if(expressao_numerica()):
+        token_opcional = ler_proximo_token()
+        print('token  token_opcional '+str(token_opcional))
+        if (sinal(token_opcional)):
+            ler_token()
+            return expressao_aritmetica()
+        elif(token_opcional[0] == ";"):
+            return True
+    else:
+        if (opcional):
+            voltar_token()
+            return False
+        else:
+            raise ExpressaoAritmeticaInvalidaException("Expressão aritmética '" + token_atual[0] + "' feita de forma inválida na linha " + token_atual[1])
+
+def expressao_numerica():
+    if (identificador(opcional=True) or numero_inteiro(opcional=True)):
+        return True
+    else:
+        raise ExpressaoNumericaInvalidaException("Expressão numérica '" + token[0] + "' feita de forma inválida na linha " + token[1])
+
+
+def sinal(token = None):
+    if (token == None):
+        token = ler_token()
+    sinais = "+-*/"
+    if (token[0] in sinais):
+        return True
+    return False
 
 def prox_eh_comando(token=None):
     if (token == None):
         token = ler_proximo_token()
+    
+    if(token[0] == '$'):
+        #encerrar comandos em sequencia
+        return False
+    
+    elif(token[0] == '}'):
+        #encerrar comandos em sequencia
+        return False
 
     return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True))

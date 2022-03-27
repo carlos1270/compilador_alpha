@@ -92,3 +92,23 @@ class NaoEhPermitidaDeclaracaoException(AnaliseSintaticaExeception):
 class PalavrasReservadasComandoException(AnaliseSintaticaExeception):
     def __init__(self, message):
         super().__init__(message)
+
+class EsperadoComandoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ComandoAtribuicaoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ExpressaoNumericaInvalidaException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ExpressaoAritmeticaInvalidaException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ExpressaoInvalidaException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)

@@ -1,8 +1,4 @@
 prog ads2a;
-
-    const inteiro teste = 1;
-    const booleano a = 2;
-
     se(verdadeiro) {
-        
+        a = nao verdadeiro e nao verdadeiro carlos nao falso;
     }       
