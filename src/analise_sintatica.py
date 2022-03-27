@@ -426,12 +426,10 @@ def expressao_booleana(opcional=False):
 
     if (expressao_simples(opcional)):
         token_opcional = ler_proximo_token()
-        print('token opcional '+ str(token_opcional))
 
         if (token_opcional[0] == "e" or token_opcional[0] == "ou"):
             return operador_opcional()
         elif (token_opcional[0] == ')'):
-            print('retornar true')
             return True
     else:
         if (opcional):
@@ -464,7 +462,6 @@ def termo(opcional=False):
         if (relacao(proximo_token)):
             return relacao_opcional()
         else:
-            print('termo verdadeiro')
             return True
     else:
         if(opcional):
@@ -544,11 +541,9 @@ def eh_booleano():
     return False
 
 def expressao_aritmetica(opcional=False):
-    print('entrou aritmetica')
     token_atual = ler_token_atual()
     if(expressao_numerica()):
         token_opcional = ler_proximo_token()
-        print('token  token_opcional '+str(token_opcional))
         if (sinal(token_opcional)):
             ler_token()
             return expressao_aritmetica()
