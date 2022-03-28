@@ -23,7 +23,7 @@ def checar_comando_atribuicao(token):
 def palavras_reservada(token):
 
     palavras_reservadas = [
-        'booleano', 'inteiro', 'verdadeiro', 'falso', 'nao', 'e', 'ou', 'func', 'prog'
+        'booleano', 'inteiro', 'verdadeiro', 'falso', 'nao', 'e', 'ou', 'func', 'prog', 'retorno'
     ]
 
     for palavra in palavras_reservadas:
@@ -145,12 +145,12 @@ def ponto_virgula():
     else:
         raise EsperaPontoVirgulaExeception("Esperado ';' no lugar de '" + token[0] + "' na linha " + token[1])
 
-def bloco(bloco_interno=False):
+def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False):
     token = ler_token()
-    
+
     if (token[0] == '$'):
         return True
-    else: 
+    else:
         if (token[0] == 'const'):
 
             if(bloco_interno):
@@ -164,17 +164,28 @@ def bloco(bloco_interno=False):
             else:
                 declaracao_de_variavel()
         elif(token[0] == 'func'):
-
-            if(bloco_interno):
-                return declaracao_de_sub_rotina()
+            if(bloco_interno_funcao_retorno):
+                raise NaoEhPermitidaDeclaracaoException("Não é permitida declaração de função dentro desse bloco '"+token[0]+"' na linha '"+token[1]+"'")
+                #return declaracao_de_sub_rotina()
             else:
                 declaracao_de_sub_rotina()
-        elif(prox_eh_comando(token=token)):
-
-            if(bloco_interno):
-                return comando(token)
+        elif(token[0] == 'retorno'):
+            if(bloco_interno_funcao_retorno):
+                comando_de_retorno_de_valor()
             else:
-                comando(token)
+                raise ComandoDeRetornoDeValorInvalidoException("Comando de retorno só pode ser chamado em blocos de função com retorno")
+        elif(prox_eh_comando(token=token)):
+            print('proximo comando meu deus')
+            if(bloco_interno):
+                return comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+            else:
+                comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+        
+        elif(token[0] == '}' or token[0] == ')'):
+            if(bloco_interno):
+                raise EsperadoComandoException("Esperado comando entre as {} encontrado '" + token[0] + "' na linha " + token[1])
+            voltar_token()
+            return True
     
     return bloco() 
 
@@ -325,70 +336,54 @@ def declaracao_de_funcao():
         token = ler_proximo_token()
         if (token[0] == ')'):
             token = ler_token()
-            return abre_chaves() and bloco(bloco_interno=True) and fecha_chaves()
+            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True) and fecha_chaves()
         elif(parametros_formais() and fecha_parenteses()):
-            return abre_chaves() and bloco(bloco_interno=True) and fecha_chaves()
+            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True) and fecha_chaves()
     else:
         return False
 
-def comando(token=None):
+def comando(token=None, bloco_interno_funcao_retorno=False):
     if (token == None):
         token = ler_token() 
     
     if (token[0] == '$'):
         return True
-    
-    elif(token[0] == '}'):
-        #nao ha nada dentro do bloco do comando
-        raise EsperadoComandoException("Esperado comando entre as {} encontrado '" + token[0] + "' na linha " + token[1])
 
     elif (token[0] == 'senao'):
         raise ComandoCondicionalElseException("Esperado comando 'se' predecedente a '" + token[0] + "' na linha " + token[1])
 
     elif (token[0] == 'se'):
-        comando_condicional_if()
-        if (prox_eh_comando()):
-            return comando()
-
+        comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
     elif (token[0] == 'enquanto'):
-        comando_de_laco_while()
-        if (prox_eh_comando()):
-            return comando()
-
-    elif (token[0] == 'retorno'):
-        comando_de_retorno_de_valor()
-        if (prox_eh_comando()):
-            return comando()
+        comando_de_laco_while(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
 
     elif ((token[0] == 'pare') or (token[0] == 'pule')):
         comandos_de_desvio_incondicional()
-        if (prox_eh_comando()):
-            return comando()
-
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
     elif (token[0] == 'exibir'):
         comando_impressao_tela()
-        if (prox_eh_comando()):
-            return comando()
-
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
     elif (identificador(token=token, comando=True)):
         comando_de_atribuicao()
-        if (prox_eh_comando()):
-            return comando()
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
     else:
         raise ComandoNaoIdentificadoExecption("Comando '" + token[0] + "' não identificado na linha " + token[1])
 
     return True
 
-def comando_condicional_if():
+def comando_condicional_if(bloco_interno_funcao_retorno=False):
     local_token = ler_token_atual()
-
-    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and comando() and fecha_chaves()):
+    print('comecou if')
+    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno) and fecha_chaves()):
+        print('terminou if')
 
         proximo_token = ler_proximo_token()
 
         if(proximo_token[0] == 'senao'):
             proximo_token = ler_token()
-            return comando_condicional_else()
+            return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
         else:
             return True
     else:
@@ -501,23 +496,14 @@ def operador(token=None, opcional=False):
         else:
             raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
 
-def comando_condicional_else():
-    global token
-    local_token = token
+def comando_condicional_else(bloco_interno_funcao_retorno=False):
+    return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno) and fecha_chaves()
 
-    if (abre_chaves() and comando() and fecha_chaves()):
-        if (prox_eh_comando()):
-            return comando()
-        else:
-            return True
-    else:
-        raise ComandoCondicionalElseException("Comando condicional else'" + local_token[0] + "' inválido na linha " + local_token[1])
-
-def comando_de_laco_while():
-    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and comando() and fecha_chaves()
+def comando_de_laco_while(bloco_interno_funcao_retorno=False):
+    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno) and fecha_chaves()
 
 def comando_de_retorno_de_valor():
-    """ Code """
+    return (identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and ponto_virgula()
 
 def comandos_de_desvio_incondicional():
     """ Code """
@@ -530,6 +516,7 @@ def comando_de_atribuicao():
     local_token = token
 
     if (expressao() and ponto_virgula()):
+        print('passou atribuicao')
         return True
     else:
         raise ComandoAtribuicaoException("Atribuição '" + local_token[0] + "' realizada de forma inválida na linha " + local_token[1])
@@ -613,6 +600,9 @@ def prox_eh_comando(token=None):
     
     elif(token[0] == '}'):
         #encerrar comandos em sequencia
+        return False
+    
+    elif(token[0] == 'func'):
         return False
 
     return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True))
