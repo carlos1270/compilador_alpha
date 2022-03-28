@@ -2,11 +2,13 @@ prog ads2a;
     inteiro i;
     i = 1;
     
-    func inteiro funcao(inteiro b){
-        se(a > b){
-            a = 3;
+    enquanto(i < 3){
+        se(i > 2){
+            i = i + 1;
         }
-        func inteiro kelwin(inteiro c){
-            a = 3;
-        }
+        pare;
     }
+
+    exibir(kelwin);
+
+

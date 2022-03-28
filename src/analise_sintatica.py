@@ -145,7 +145,7 @@ def ponto_virgula():
     else:
         raise EsperaPontoVirgulaExeception("Esperado ';' no lugar de '" + token[0] + "' na linha " + token[1])
 
-def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False):
+def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enquanto=False):
     token = ler_token()
 
     if (token[0] == '$'):
@@ -173,13 +173,17 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False):
             if(bloco_interno_funcao_retorno):
                 comando_de_retorno_de_valor()
             else:
-                raise ComandoDeRetornoDeValorInvalidoException("Comando de retorno só pode ser chamado em blocos de função com retorno")
-        elif(prox_eh_comando(token=token)):
-            print('proximo comando meu deus')
-            if(bloco_interno):
-                return comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+                raise ComandoDeRetornoDeValorInvalidoException("Comando de retorno só pode ser chamado em blocos de função com retorno. Erro na linha '"+token[1]+"'")
+        elif(token[0] == 'pare' or token[0] == 'pule'):
+            if(comando_enquanto):
+                comandos_de_desvio_incondicional()
             else:
-                comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+                raise ComandoIncondicionalInvalidoException("Comandos 'pare' ou 'pule' devem ser utilizados dentro de blocos 'enquanto'. Erro na linha '"+token[1]+"'")
+        elif(prox_eh_comando(token=token)):
+            if(bloco_interno):
+                return comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+            else:
+                comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
         
         elif(token[0] == '}' or token[0] == ')'):
             if(bloco_interno):
@@ -342,7 +346,7 @@ def declaracao_de_funcao():
     else:
         return False
 
-def comando(token=None, bloco_interno_funcao_retorno=False):
+def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=False):
     if (token == None):
         token = ler_token() 
     
@@ -353,37 +357,35 @@ def comando(token=None, bloco_interno_funcao_retorno=False):
         raise ComandoCondicionalElseException("Esperado comando 'se' predecedente a '" + token[0] + "' na linha " + token[1])
 
     elif (token[0] == 'se'):
-        comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+        comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
     elif (token[0] == 'enquanto'):
         comando_de_laco_while(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
 
     elif ((token[0] == 'pare') or (token[0] == 'pule')):
         comandos_de_desvio_incondicional()
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
     elif (token[0] == 'exibir'):
         comando_impressao_tela()
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
     elif (identificador(token=token, comando=True)):
         comando_de_atribuicao()
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
     else:
         raise ComandoNaoIdentificadoExecption("Comando '" + token[0] + "' não identificado na linha " + token[1])
 
     return True
 
-def comando_condicional_if(bloco_interno_funcao_retorno=False):
+def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False):
     local_token = ler_token_atual()
-    print('comecou if')
-    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno) and fecha_chaves()):
-        print('terminou if')
+    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto) and fecha_chaves()):
 
         proximo_token = ler_proximo_token()
 
         if(proximo_token[0] == 'senao'):
             proximo_token = ler_token()
-            return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
+            return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
         else:
             return True
     else:
@@ -480,7 +482,6 @@ def relacao_opcional(token=None):
         return True
 
 def relacao(token):
-    print('entrou relacao')
     return (token[0] == "==") or (token[0] == "!=") or (token[0] == "<=") or (token[0] == ">=") or (token[0] == ">") or (token[0] == "<")
 
 def operador(token=None, opcional=False):
@@ -496,27 +497,26 @@ def operador(token=None, opcional=False):
         else:
             raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
 
-def comando_condicional_else(bloco_interno_funcao_retorno=False):
-    return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno) and fecha_chaves()
+def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquanto=False):
+    return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto) and fecha_chaves()
 
 def comando_de_laco_while(bloco_interno_funcao_retorno=False):
-    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno) and fecha_chaves()
+    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True) and fecha_chaves()
 
 def comando_de_retorno_de_valor():
     return (identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and ponto_virgula()
 
 def comandos_de_desvio_incondicional():
-    """ Code """
+    return ponto_virgula()
 
 def comando_impressao_tela():
-    """ Code """
+    return abre_parenteses() and (identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and fecha_parenteses() and ponto_virgula()
 
 def comando_de_atribuicao():
     global token
     local_token = token
 
     if (expressao() and ponto_virgula()):
-        print('passou atribuicao')
         return True
     else:
         raise ComandoAtribuicaoException("Atribuição '" + local_token[0] + "' realizada de forma inválida na linha " + local_token[1])
@@ -549,13 +549,11 @@ def expressao_aritmetica(opcional=False):
     if(expressao_numerica()):
         token_opcional = ler_proximo_token()
         if (sinal(token_opcional)):
-            print('é sinal')
             ler_token()
             return expressao_aritmetica()
         elif(token_opcional[0] == ";"  or token_opcional[0] == ")"):
             return True
         elif(relacao(token_opcional[0])):
-            print('entrou relacao em aritimetica')
             ler_token()
             return expressao_aritmetica()
         elif(operador(token=token_opcional, opcional=True)):
@@ -568,12 +566,10 @@ def expressao_aritmetica(opcional=False):
             raise ExpressaoAritmeticaInvalidaException("Expressão aritmética '" + token_atual[0] + "' feita de forma inválida na linha " + token_atual[1])
 
 def expressao_numerica():
-    print('entrou para numerica')
     token = ler_token_atual()
     if(eh_booleano()):
         return False
     elif (identificador(opcional=True) or numero_inteiro(opcional=True)):
-        print('passou como expressao numerica')
         return True
     else:
         if(relacao(token=token) or eh_operador()):

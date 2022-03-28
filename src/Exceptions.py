@@ -124,3 +124,7 @@ class RelacaoAritmeticaInvalidaException(AnaliseSintaticaExeception):
 class ComandoDeRetornoDeValorInvalidoException(AnaliseSintaticaExeception):
     def __init__(self, message):
         super().__init__(message)
+
+class ComandoIncondicionalInvalidoException(AnaliseSintaticaExeception):
+    def __init__(self, message):
+        super().__init__(message)
