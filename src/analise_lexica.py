@@ -73,7 +73,9 @@ def adicionar_pipes(texto):
     if(len(nova_linha) > 0):
         if(nova_linha[0] == '|'):
             nova_linha = nova_linha[1:]
-
+        if(nova_linha[len(nova_linha)-1] == ';'):
+            if(nova_linha[len(nova_linha)-2] != '|'):
+                nova_linha = nova_linha[:len(nova_linha)-1]+"|;"
     return nova_linha
 
 def lista_tokens(lista):

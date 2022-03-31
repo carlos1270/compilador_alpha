@@ -1,6 +1,14 @@
 prog ads2a;
-    const booleano a = 1;
+    inteiro i;
+    i = 1;
+    
+    enquanto(i < 3){
+        se(i > 2){
+            i = i + 1;
+        }
+        pare;
+    }
 
-    se(verdadeiro) {
-        a = nao verdadeiro e nao false;
-    }       
+    exibir(kelwin);
+
+
