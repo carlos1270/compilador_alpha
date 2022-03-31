@@ -507,30 +507,43 @@ def comando_de_laco_while(bloco_interno_funcao_retorno=False):
     return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True) and fecha_chaves()
 
 def comando_de_retorno_de_valor():
-    return (identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and ponto_virgula()
+    if (checar_chamada(opcional=True)):
+        return chamada() and ponto_virgula()
+    elif ((identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and ponto_virgula()):
+        return True
+
+    return False
 
 def comandos_de_desvio_incondicional():
     return ponto_virgula()
 
 def comando_impressao_tela():
-    return abre_parenteses() and (identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and fecha_parenteses() and ponto_virgula()
+    if (abre_parenteses()):
+        if (checar_chamada(opcional=True)):
+            return chamada() and fecha_parenteses() and ponto_virgula()
+        elif (identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and fecha_parenteses() and ponto_virgula():
+            return True
+    
+    return False
 
 def comando_de_atribuicao():
     token_atual = ler_token_atual()
 
-    if (atribuicao() and expressao() and ponto_virgula()):
-        return True
+    if (atribuicao()):
+        if (checar_chamada(opcional=True)):
+            return chamada() and ponto_virgula()
+        else:
+            return expressao() and ponto_virgula()
     else:
         raise ComandoAtribuicaoException("Atribuição '" + token_atual[0] + "' realizada de forma inválida na linha " + token_atual[1])
 
 def expressao():
-    token_atual = ler_token_atual()
-
     if(expressao_booleana(opcional=True)):
         return True
-    elif(expressao_aritmetica(opcional=True)):
+    elif(expressao_aritmetica()):
         return True
     else:
+        token_atual = ler_token_atual()
         raise ExpressaoInvalidaException("Expressão '" + token_atual[0] + "' inválida na linha " + token_atual[1])
 
 def eh_booleano():
@@ -605,6 +618,7 @@ def prox_eh_comando(token=None):
     return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True))
 
 def chamada():
+    print("entrou chamada")
     return abre_parenteses() and secao_parametros_passados() and fecha_parenteses()
 
 def secao_parametros_passados():
@@ -622,3 +636,14 @@ def secao_parametros_passados():
         return True
 
     return secao_parametros_passados()
+
+def checar_chamada(opcional=False):
+    if (identificador(opcional=opcional)):
+        token = ler_proximo_token()
+        if (token[0] == '('):
+            return True
+        else:
+            voltar_token()
+            return False
+    else:
+        return False
