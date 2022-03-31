@@ -1,14 +1,5 @@
 prog ads2a;
     inteiro i;
-    i = 1;
-    
-    enquanto(i < 3){
-        se(i > 2){
-            i = i + 1;
-        }
-        pare;
-    }
 
-    exibir(kelwin);
-
+    exibir(falso);
 

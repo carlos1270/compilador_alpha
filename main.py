@@ -12,7 +12,7 @@ try:
     tabela_simbolos = analise_sintatica(tabela_tokens, tabela_simbolos)
     print(tabela_simbolos)
     for i in tabela_simbolos:
-        print(i.identificador)
+        i.print()
 except AnaliseLexicaExeception as e:
     print(e.get_message())
 except AnaliseSintaticaExeception as e:
