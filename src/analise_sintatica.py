@@ -285,7 +285,7 @@ def declaracao_de_sub_rotina():
         raise TipoDeSubRotinaInvalidaException("Tipo '" + token[0] + "' de sub-rotina inválida na linha " + token[1])
 
 def declaracao_de_procedimento():
-    if (identificador(tipo='func') and abre_parenteses()):
+    if (identificador(tipo='proc') and abre_parenteses()):
         token = ler_proximo_token()
         if (token[0] == ')'):
             token = ler_token()
@@ -336,9 +336,6 @@ def fecha_parenteses():
         raise EsperadoParentesesExeception("Esperado ')' ao invés de '" + token[0] + "' na linha " + token[1])
 
 def declaracao_de_funcao():
-
-    """ Faltando chamada do comando de retorno dentro do bloco da função """
-
     if (identificador(tipo='func') and abre_parenteses()):
         token = ler_proximo_token()
         if (token[0] == ')'):

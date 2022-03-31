@@ -33,3 +33,6 @@ class Simbolo:
                 return False
         
         return True
+
+    def print(self):
+        print("Identificador: " + str(self.identificador) + ", Valor: " + str(self.valor) + ", Escopo: " + str(self.escopo) + ", Tipo: " + str(self.tipo) + ", Linha: " + str(self.linha))
