@@ -152,31 +152,29 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
         return True
     else:
         if (token[0] == 'const'):
-
-            if(bloco_interno):
-                return declaracao_de_constante()
-            else:
-                declaracao_de_constante()
+            declaracao_de_constante()
+            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
         elif(token[0] == 'inteiro' or token[0] == 'booleano'):
+            declaracao_de_variavel()
+            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
 
-            if(bloco_interno):
-                return declaracao_de_variavel()
-            else:
-                declaracao_de_variavel()
         elif(token[0] == 'func'):
             if(bloco_interno_funcao_retorno):
                 raise NaoEhPermitidaDeclaracaoException("Não é permitida declaração de função dentro desse bloco '"+token[0]+"' na linha '"+token[1]+"'")
                 #return declaracao_de_sub_rotina()
             else:
                 declaracao_de_sub_rotina()
+                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
         elif(token[0] == 'retorno'):
             if(bloco_interno_funcao_retorno):
                 comando_de_retorno_de_valor()
+                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
             else:
                 raise ComandoDeRetornoDeValorInvalidoException("Comando de retorno só pode ser chamado em blocos de função com retorno. Erro na linha '"+token[1]+"'")
         elif(token[0] == 'pare' or token[0] == 'pule'):
             if(comando_enquanto):
                 comandos_de_desvio_incondicional()
+                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
             else:
                 raise ComandoIncondicionalInvalidoException("Comandos 'pare' ou 'pule' devem ser utilizados dentro de blocos 'enquanto'. Erro na linha '"+token[1]+"'")
         elif(prox_eh_comando(token=token)):
@@ -418,17 +416,17 @@ def expressao_booleana(opcional=False):
     global lista, i_token
     local_token = lista[i_token]
 
-    if(expressao_aritmetica(opcional=True)):
-        if (operador(opcional=True)):
-            return expressao_booleana(opcional=True)
-
-    elif (expressao_simples(opcional)):
+    if (expressao_simples(opcional)):
         token_opcional = ler_proximo_token()
 
         if (token_opcional[0] == "e" or token_opcional[0] == "ou"):
             return operador_opcional()
         elif (token_opcional[0] == ')'):
             return True
+        elif(sinal(token_opcional)):
+            if (opcional):
+                voltar_token()
+            return False
     else:
         if (opcional):
             return False
@@ -454,7 +452,7 @@ def termo(opcional=False):
     global lista, i_token
     local_token = lista[i_token]
 
-    if (booleano(opcional=True) or identificador(opcional=True)):
+    if (booleano(opcional=True) or identificador(opcional=True) or numero_inteiro(opcional=True)):
         proximo_token = ler_proximo_token()
         
         if (relacao(proximo_token)):
@@ -615,7 +613,6 @@ def prox_eh_comando(token=None):
     return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True))
 
 def chamada():
-    print("entrou chamada")
     return abre_parenteses() and secao_parametros_passados() and fecha_parenteses()
 
 def secao_parametros_passados():
