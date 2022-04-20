@@ -12,6 +12,7 @@ class Simbolo:
             self.tipo = tipo
             self.linha = linha
             self.mutavel = True
+            self.parametros = []
         else:
             self.identificador = "#"
             self.valor = valor
@@ -19,6 +20,7 @@ class Simbolo:
             self.tipo = tipo
             self.linha = linha
             self.mutavel = True
+            self.parametros = []
             
 
     def validar_identificador(self, identificador):
@@ -35,4 +37,4 @@ class Simbolo:
         return True
 
     def print(self):
-        print("Identificador: " + str(self.identificador) + ", Valor: " + str(self.valor) + ", Escopo: " + str(self.escopo) + ", Tipo: " + str(self.tipo) + ", Linha: " + str(self.linha))
+        print("Identificador: " + str(self.identificador) + ", Valor: " + str(self.valor) + ", Escopo: " + str(self.escopo) + ", Tipo: " + str(self.tipo) + ", Linha: " + str(self.linha) + ", Parametros: " + str(self.parametros))

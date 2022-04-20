@@ -1,3 +1,4 @@
+from asyncio.windows_events import NULL
 from pickletools import read_uint1
 from threading import local
 from tkinter.tix import Tree
@@ -82,7 +83,13 @@ def adicionar_simbolo(simbolo, token, tipo=None):
     if (not(simbolo_ja_adicionado)):
         simbolos.append(simbolo)
 
-def criar_simbolo(token, tipo=None):
+def adicionar_paramentro(id_func, parametro):
+    global simbolos
+    for simbolo in simbolos:
+        if (simbolo.identificador == id_func[0]):
+            simbolo.parametros.append(parametro.tipo + ':' + parametro.identificador)
+
+def criar_simbolo(token, tipo=None, id_func=None):
     simbolo = Simbolo(token[0], linha=token[1])
     
     if (simbolo.identificador != "#"):
@@ -94,6 +101,9 @@ def criar_simbolo(token, tipo=None):
             simbolo.tipo = tipo
             adicionar_simbolo(simbolo, token, tipo=tipo)
 
+        if (id_func != None):
+            adicionar_paramentro(id_func, simbolo)
+
 def programa():
     global token, simbolos
     if (token[0] == 'prog' and identificador() and ponto_virgula() and bloco()):
@@ -101,7 +111,7 @@ def programa():
     else: 
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
-def identificador(token=None, opcional=False, tipo=None, comando=False):
+def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None):
     if (token == None):
         token = ler_token()
 
@@ -119,8 +129,8 @@ def identificador(token=None, opcional=False, tipo=None, comando=False):
                 return False
             else: 
                 raise IdentificadorInvalidoExeception("Identificador '" + token[0] + "' inválido na linha " + token[1])
-
-    criar_simbolo(token, tipo=tipo)
+    
+    criar_simbolo(token, tipo=tipo, id_func=id_func)
     return True
 
 def letra(letra):
@@ -283,25 +293,27 @@ def declaracao_de_sub_rotina():
         raise TipoDeSubRotinaInvalidaException("Tipo '" + token[0] + "' de sub-rotina inválida na linha " + token[1])
 
 def declaracao_de_procedimento():
+    global lista, i_token
+
     if (identificador(tipo='proc:vazio') and abre_parenteses()):
         token = ler_proximo_token()
         if (token[0] == ')'):
             token = ler_token()
             return abre_chaves() and bloco(bloco_interno=True) and fecha_chaves()
-        elif(parametros_formais() and fecha_parenteses()):
+        elif(parametros_formais(lista[i_token - 1]) and fecha_parenteses()):
             return abre_chaves() and bloco(bloco_interno=True) and fecha_chaves()
     else:
         return False
 
-def parametros_formais():
-    if (tipo() and identificador()):
+def parametros_formais(id_func):
+    if (tipo() and identificador(id_func=id_func)):
         token = ler_proximo_token()
         if (token[0] == ')'):
             return True
         elif (token[0] == ','):
             token = ler_token()
 
-    return parametros_formais()
+    return parametros_formais(id_func)
 
 def abre_chaves():
     token = ler_token()
@@ -334,12 +346,14 @@ def fecha_parenteses():
         raise EsperadoParentesesExeception("Esperado ')' ao invés de '" + token[0] + "' na linha " + token[1])
 
 def declaracao_de_funcao(tipo):
+    global lista, i_token
+
     if (identificador(tipo='func:'+tipo) and abre_parenteses()):
         token = ler_proximo_token()
         if (token[0] == ')'):
             token = ler_token()
             return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True) and fecha_chaves()
-        elif(parametros_formais() and fecha_parenteses()):
+        elif(parametros_formais(lista[i_token - 1]) and fecha_parenteses()):
             return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True) and fecha_chaves()
     else:
         return False

@@ -16,7 +16,7 @@ prog ads2a;
     inteiro cont;
     inteiro ans;
 
-    func vazio teste1() {
+    func vazio teste1(booleano a, inteiro b) {
         a = b;
     }
 
