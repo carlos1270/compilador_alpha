@@ -16,7 +16,12 @@ prog ads2a;
     inteiro cont;
     inteiro ans;
 
+    func vazio teste1() {
+        a = b;
+    }
+
     t = 4;
+    a = teste1();
     atribuicao = teste(t, n);
     enquanto(t > 0){
         t = t - 1;

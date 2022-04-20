@@ -278,12 +278,12 @@ def declaracao_de_sub_rotina():
     if (token[0] == "vazio"):
         declaracao_de_procedimento()
     elif (token[0] == "inteiro" or token[0] == "booleano"):
-        declaracao_de_funcao()
+        declaracao_de_funcao(tipo=token[0])
     else:
         raise TipoDeSubRotinaInvalidaException("Tipo '" + token[0] + "' de sub-rotina inválida na linha " + token[1])
 
 def declaracao_de_procedimento():
-    if (identificador(tipo='proc') and abre_parenteses()):
+    if (identificador(tipo='proc:vazio') and abre_parenteses()):
         token = ler_proximo_token()
         if (token[0] == ')'):
             token = ler_token()
@@ -333,8 +333,8 @@ def fecha_parenteses():
     else:
         raise EsperadoParentesesExeception("Esperado ')' ao invés de '" + token[0] + "' na linha " + token[1])
 
-def declaracao_de_funcao():
-    if (identificador(tipo='func') and abre_parenteses()):
+def declaracao_de_funcao(tipo):
+    if (identificador(tipo='func:'+tipo) and abre_parenteses()):
         token = ler_proximo_token()
         if (token[0] == ')'):
             token = ler_token()
