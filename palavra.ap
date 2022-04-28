@@ -1,5 +1,7 @@
 prog ads2a;
 
+    inteiro t;
+
     func inteiro teste(inteiro a, inteiro b){
         se(a > b e b > 10){
             a = b + a;
@@ -10,15 +12,27 @@ prog ads2a;
         ret = a + b;
         retorno ret; 
     }
-    inteiro t;
+    
     inteiro n;
     inteiro ent;
     inteiro cont;
-    inteiro ans;
 
     func vazio teste1(booleano a, inteiro b) {
+        inteiro uc;
         a = b;
+        se(verdadeiro){
+            inteiro ohnizuc;
+            se(ohnizuc){
+                inteiro uemoc;
+            }senao{
+                inteiro uozog;
+            }
+        }senao{
+            inteiro palhacinho;
+        }
     }
+
+    inteiro ans;
 
     t = 4;
     a = teste1();
@@ -36,6 +50,7 @@ prog ads2a;
         enquanto(k > 0){
             k = k - 1;
             se(cont < 0){
+                inteiro vei;
                 ans = ans + 1;
                 cont = cont + 1;
                 pare;
