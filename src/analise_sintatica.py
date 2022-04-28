@@ -68,7 +68,7 @@ def tipo_valido(token):
     
     return False
 
-def adicionar_simbolo(simbolo, token, tipo=None):
+def adicionar_simbolo(simbolo, token, tipo=None, escopo=None):
     global simbolos
     simbolo_ja_adicionado = False
     
@@ -89,8 +89,8 @@ def adicionar_paramentro(id_func, parametro):
         if (simbolo.identificador == id_func[0]):
             simbolo.parametros.append(parametro.tipo + ':' + parametro.identificador)
 
-def criar_simbolo(token, tipo=None, id_func=None):
-    simbolo = Simbolo(token[0], linha=token[1])
+def criar_simbolo(token, tipo=None, id_func=None, escopo=None):
+    simbolo = Simbolo(token[0], escopo=escopo, linha=token[1])
     
     if (simbolo.identificador != "#"):
         if (tipo_valido(lista[i_token - 1])):
@@ -106,12 +106,12 @@ def criar_simbolo(token, tipo=None, id_func=None):
 
 def programa():
     global token, simbolos
-    if (token[0] == 'prog' and identificador() and ponto_virgula() and bloco()):
+    if (token[0] == 'prog' and identificador() and ponto_virgula() and bloco(escopo='1:1')):
         return simbolos
     else: 
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
-def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None):
+def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None):
     if (token == None):
         token = ler_token()
 
@@ -130,7 +130,7 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
             else: 
                 raise IdentificadorInvalidoExeception("Identificador '" + token[0] + "' inválido na linha " + token[1])
     
-    criar_simbolo(token, tipo=tipo, id_func=id_func)
+    criar_simbolo(token, tipo=tipo, id_func=id_func, escopo=escopo)
     return True
 
 def letra(letra):
@@ -155,43 +155,44 @@ def ponto_virgula():
     else:
         raise EsperaPontoVirgulaExeception("Esperado ';' no lugar de '" + token[0] + "' na linha " + token[1])
 
-def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enquanto=False):
+def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
     token = ler_token()
 
     if (token[0] == '$'):
         return True
     else:
         if (token[0] == 'const'):
-            declaracao_de_constante()
-            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+            declaracao_de_constante(escopo=escopo)
+            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
         elif(token[0] == 'inteiro' or token[0] == 'booleano'):
-            declaracao_de_variavel()
-            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+            declaracao_de_variavel(escopo=escopo)
+            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
 
         elif(token[0] == 'func'):
             if(bloco_interno_funcao_retorno):
                 raise NaoEhPermitidaDeclaracaoException("Não é permitida declaração de função dentro desse bloco '"+token[0]+"' na linha '"+token[1]+"'")
                 #return declaracao_de_sub_rotina()
             else:
-                declaracao_de_sub_rotina()
-                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+                novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
+                declaracao_de_sub_rotina(escopo=escopo)
+                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
         elif(token[0] == 'retorno'):
             if(bloco_interno_funcao_retorno):
                 comando_de_retorno_de_valor()
-                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
             else:
                 raise ComandoDeRetornoDeValorInvalidoException("Comando de retorno só pode ser chamado em blocos de função com retorno. Erro na linha '"+token[1]+"'")
         elif(token[0] == 'pare' or token[0] == 'pule'):
             if(comando_enquanto):
                 comandos_de_desvio_incondicional()
-                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
             else:
                 raise ComandoIncondicionalInvalidoException("Comandos 'pare' ou 'pule' devem ser utilizados dentro de blocos 'enquanto'. Erro na linha '"+token[1]+"'")
         elif(prox_eh_comando(token=token)):
             if(bloco_interno):
-                return comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+                return comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
             else:
-                comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+                comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
         
         elif(token[0] == '}' or token[0] == ')'):
             if(bloco_interno):
@@ -199,13 +200,13 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
             voltar_token()
             return True
     
-    return bloco() 
+    return bloco(escopo=escopo) 
 
 
-def declaracao_de_constante():
+def declaracao_de_constante(escopo=None):
     global token 
     token_local = token
-    if (tipo() and definicao_constante() and ponto_virgula()):
+    if (tipo() and definicao_constante(escopo=escopo) and ponto_virgula()):
         return True
     else:
         raise DeclaracaoDeConstateException("Constante '" + token_local[0] + "' declarada de forma inválida na linha " + token_local[1])
@@ -219,8 +220,8 @@ def tipo():
     else:
         raise TipoConstanteInvalidoException("Tipo de dado '" + token[0] + "' inválido na linha " + token[1])
 
-def definicao_constante():
-    if (identificador() and atribuicao() and constante()):
+def definicao_constante(escopo=None):
+    if (identificador(escopo=escopo) and atribuicao() and constante()):
         return True
     else:
         return False
@@ -270,9 +271,9 @@ def booleano(opcional=False):
         else:
             raise BooleanoInvalidoException("Booleano '" + token[0] + "' inválido na linha " + token[1])
 
-def declaracao_de_variavel():
+def declaracao_de_variavel(escopo=None):
     global token
-    if (identificador()):
+    if (identificador(escopo=escopo)):
         print("edclaração" + token[0])
         if (ponto_virgula()):
             return True
@@ -282,26 +283,26 @@ def declaracao_de_variavel():
         return False
 
 
-def declaracao_de_sub_rotina():
+def declaracao_de_sub_rotina(escopo=None):
     token = ler_token()
     
     if (token[0] == "vazio"):
-        declaracao_de_procedimento()
+        declaracao_de_procedimento(escopo=escopo)
     elif (token[0] == "inteiro" or token[0] == "booleano"):
-        declaracao_de_funcao(tipo=token[0])
+        declaracao_de_funcao(tipo=token[0], escopo=escopo)
     else:
         raise TipoDeSubRotinaInvalidaException("Tipo '" + token[0] + "' de sub-rotina inválida na linha " + token[1])
 
-def declaracao_de_procedimento():
+def declaracao_de_procedimento(escopo=None):
     global lista, i_token
 
-    if (identificador(tipo='proc:vazio') and abre_parenteses()):
+    if (identificador(tipo='proc:vazio', escopo=escopo) and abre_parenteses()):
         token = ler_proximo_token()
         if (token[0] == ')'):
             token = ler_token()
-            return abre_chaves() and bloco(bloco_interno=True) and fecha_chaves()
+            return abre_chaves() and bloco(bloco_interno=True, escopo=escopo+':1') and fecha_chaves()
         elif(parametros_formais(lista[i_token - 1]) and fecha_parenteses()):
-            return abre_chaves() and bloco(bloco_interno=True) and fecha_chaves()
+            return abre_chaves() and bloco(bloco_interno=True, escopo=escopo+':1') and fecha_chaves()
     else:
         return False
 
@@ -345,20 +346,20 @@ def fecha_parenteses():
     else:
         raise EsperadoParentesesExeception("Esperado ')' ao invés de '" + token[0] + "' na linha " + token[1])
 
-def declaracao_de_funcao(tipo):
+def declaracao_de_funcao(tipo, escopo=None):
     global lista, i_token
 
-    if (identificador(tipo='func:'+tipo) and abre_parenteses()):
+    if (identificador(tipo='func:'+tipo, escopo=escopo) and abre_parenteses()):
         token = ler_proximo_token()
         if (token[0] == ')'):
             token = ler_token()
-            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True) and fecha_chaves()
+            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
         elif(parametros_formais(lista[i_token - 1]) and fecha_parenteses()):
-            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True) and fecha_chaves()
+            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
     else:
         return False
 
-def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=False):
+def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
     if (token == None):
         token = ler_token() 
     
@@ -369,35 +370,38 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
         raise ComandoCondicionalElseException("Esperado comando 'se' predecedente a '" + token[0] + "' na linha " + token[1])
 
     elif (token[0] == 'se'):
-        comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+        novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
+        comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo+':1')
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
     elif (token[0] == 'enquanto'):
-        comando_de_laco_while(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+        novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
+        comando_de_laco_while(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, escopo=escopo+':1')
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
 
     elif ((token[0] == 'pare') or (token[0] == 'pule')):
         comandos_de_desvio_incondicional()
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
     elif (token[0] == 'exibir'):
         comando_impressao_tela()
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
     elif (identificador(token=token, comando=True)):
         comando_de_atribuicao()
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
     else:
         raise ComandoNaoIdentificadoExecption("Comando '" + token[0] + "' não identificado na linha " + token[1])
 
     return True
 
-def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False):
+def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
+    novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
     local_token = ler_token_atual()
-    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto) and fecha_chaves()):
+    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()):
 
         proximo_token = ler_proximo_token()
 
         if(proximo_token[0] == 'senao'):
             proximo_token = ler_token()
-            return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto)
+            return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
         else:
             return True
     else:
@@ -509,11 +513,11 @@ def operador(token=None, opcional=False):
         else:
             raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
 
-def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquanto=False):
-    return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto) and fecha_chaves()
+def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
+    return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()
 
-def comando_de_laco_while(bloco_interno_funcao_retorno=False):
-    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True) and fecha_chaves()
+def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None):
+    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo) and fecha_chaves()
 
 def comando_de_retorno_de_valor():
     if (checar_chamada(opcional=True)):
