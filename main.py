@@ -9,8 +9,11 @@ try:
     tabela_tokens = analise_lexica("palavra.ap")
     tabela_tokens.append(('$', '-1'))
     tabela_simbolos = analise_sintatica(tabela_tokens, tabela_simbolos)
+    print("===================== TABELA DE SIMBOLOS =====================\n")
     for i in tabela_simbolos:
         i.print()
+    
+    print("\n===================== X TABELA DE SIMBOLOS X =====================")
 except AnaliseLexicaExeception as e:
     print(e.get_message())
 except AnaliseSintaticaExeception as e:

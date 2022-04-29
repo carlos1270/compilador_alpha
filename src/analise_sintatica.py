@@ -8,8 +8,6 @@ from src.Exceptions import *
 def init(lista_tokens, tabela_simbolos):
     global token, i_token, lista, pilha, simbolos
     simbolos = tabela_simbolos
-    pilha = []
-    pilha.append(("^", '-1'))
     i_token = 0
     lista = lista_tokens
     token = lista_tokens[i_token]
@@ -42,7 +40,7 @@ def ler_token():
         i_token -= 1
         return lista[len(lista) - 1]
     
-    print(lista[i_token])
+    """ print(lista[i_token]) """
     return lista[i_token]
 
 def ler_proximo_token():
@@ -274,7 +272,6 @@ def booleano(opcional=False):
 def declaracao_de_variavel(escopo=None):
     global token
     if (identificador(escopo=escopo)):
-        print("edclaração" + token[0])
         if (ponto_virgula()):
             return True
         else:
