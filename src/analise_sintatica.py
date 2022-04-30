@@ -70,7 +70,7 @@ def tipo_valido(token):
 
 def adicionar_simbolo(simbolo, token, tipo=None, escopo=None):
     global simbolos
-    simbolo_ja_adicionado = False
+    '''simbolo_ja_adicionado = False
     
     for i in range(len(simbolos)):
         if (simbolos[i].identificador == token[0]):
@@ -80,8 +80,8 @@ def adicionar_simbolo(simbolo, token, tipo=None, escopo=None):
             else:
                 simbolo_ja_adicionado = True
     
-    if (not(simbolo_ja_adicionado)):
-        simbolos.append(simbolo)
+    #if (not(simbolo_ja_adicionado)):'''
+    simbolos.append(simbolo)
 
 def adicionar_paramentro(id_func, parametro):
     global simbolos
@@ -301,20 +301,20 @@ def declaracao_de_procedimento(escopo=None):
         if (token[0] == ')'):
             token = ler_token()
             return abre_chaves() and bloco(bloco_interno=True, escopo=escopo+':1') and fecha_chaves()
-        elif(parametros_formais(lista[i_token - 1]) and fecha_parenteses()):
+        elif(parametros_formais(lista[i_token - 1], escopo=escopo+':1') and fecha_parenteses()):
             return abre_chaves() and bloco(bloco_interno=True, escopo=escopo+':1') and fecha_chaves()
     else:
         return False
 
-def parametros_formais(id_func):
-    if (tipo() and identificador(id_func=id_func)):
+def parametros_formais(id_func, escopo=None):
+    if (tipo() and identificador(id_func=id_func, escopo=escopo)):
         token = ler_proximo_token()
         if (token[0] == ')'):
             return True
         elif (token[0] == ','):
             token = ler_token()
 
-    return parametros_formais(id_func)
+    return parametros_formais(id_func, escopo=escopo)
 
 def abre_chaves():
     token = ler_token()
@@ -354,7 +354,7 @@ def declaracao_de_funcao(tipo, escopo=None):
         if (token[0] == ')'):
             token = ler_token()
             return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
-        elif(parametros_formais(lista[i_token - 1]) and fecha_parenteses()):
+        elif(parametros_formais(lista[i_token - 1], escopo=escopo+':1') and fecha_parenteses()):
             return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
     else:
         return False
