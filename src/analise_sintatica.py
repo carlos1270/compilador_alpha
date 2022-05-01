@@ -544,7 +544,14 @@ def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None):
 def comando_de_retorno_de_valor():
     if (checar_chamada(opcional=True)):
         return chamada() and ponto_virgula()
-    elif ((identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and ponto_virgula()):
+    if (identificador(opcional=True)):
+        global variaveis_semanticas
+        token = ler_token_atual()
+        checar_declaracao(variaveis_semanticas, token)
+
+        if(ponto_virgula()):
+            return True
+    elif((numero_inteiro(opcional=True) or booleano(opcional=True)) and ponto_virgula()):
         return True
 
     return False
