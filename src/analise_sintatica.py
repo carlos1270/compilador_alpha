@@ -107,7 +107,7 @@ def criar_simbolo(token, tipo=None, id_func=None, escopo=None):
             simbolo.tipo = lista[i_token - 1][0]
             adicionar_simbolo(simbolo, token)
         
-        if (tipo != None):
+        elif (tipo != None):
             simbolo.tipo = tipo
             adicionar_simbolo(simbolo, token, tipo=tipo)
 
