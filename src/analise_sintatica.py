@@ -324,7 +324,9 @@ def declaracao_de_procedimento(escopo=None):
         return False
 
 def parametros_formais(id_func, escopo=None):
+    global variaveis_semanticas
     if (tipo() and identificador(id_func=id_func, escopo=escopo)):
+        adicionar_variavel(variaveis_semanticas, ler_token_atual(), ler_token_anterior())
         token = ler_proximo_token()
         if (token[0] == ')'):
             return True
