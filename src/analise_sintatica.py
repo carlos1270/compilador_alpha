@@ -404,6 +404,9 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
         comando_impressao_tela()
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
     elif (identificador(token=token, comando=True)):
+        global variaveis_semanticas
+        token = ler_token_atual()
+        checar_declaracao(variaveis_semanticas, token)
         comando_de_atribuicao()
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
     else:
