@@ -4,13 +4,16 @@ from threading import local
 from tkinter.tix import Tree
 from src.Simbolo import Simbolo
 from src.Exceptions import *
+from src.analise_semantica_classes import *
+from src.analise_semantica import *
 
 def init(lista_tokens, tabela_simbolos):
-    global token, i_token, lista, pilha, simbolos
+    global token, i_token, lista, pilha, simbolos, variaveis_semanticas
     simbolos = tabela_simbolos
     i_token = 0
     lista = lista_tokens
     token = lista_tokens[i_token]
+    variaveis_semanticas = VariavelHash()
 
 def checar_comando_atribuicao(token):
     if ((token[0] == 'booleano') or (token[0] == 'inteiro') or (token[0] == 'const')):
@@ -48,6 +51,14 @@ def ler_proximo_token():
     prox_token = i_token + 1
     return lista[prox_token]
 
+def ler_token_anterior():
+    global i_token, lista
+    return lista[i_token - 1]
+
+def ler_token_tipo_variavel():
+    global i_token, lista
+    return lista[i_token - 2]
+
 def voltar_token():
     global i_token
     i_token -= 1
@@ -55,6 +66,7 @@ def voltar_token():
 def analise_sintatica(lista_tokens, tabela_simbolos):
     init(lista_tokens, tabela_simbolos)
     resultado = programa()
+    variaveis_semanticas.print()
     return resultado
 
 def tipo_valido(token):
@@ -109,7 +121,9 @@ def programa():
     else: 
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
-def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None):
+def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False):
+    global variaveis_semanticas
+    
     if (token == None):
         token = ler_token()
 
@@ -129,6 +143,11 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
                 raise IdentificadorInvalidoExeception("Identificador '" + token[0] + "' inválido na linha " + token[1])
     
     criar_simbolo(token, tipo=tipo, id_func=id_func, escopo=escopo)
+
+    """ Checagens semanticas """
+    if checar_termo:
+        checar_declaracao(variaveis_semanticas, token)
+
     return True
 
 def letra(letra):
@@ -270,9 +289,10 @@ def booleano(opcional=False):
             raise BooleanoInvalidoException("Booleano '" + token[0] + "' inválido na linha " + token[1])
 
 def declaracao_de_variavel(escopo=None):
-    global token
+    global token, variaveis_semanticas
     if (identificador(escopo=escopo)):
         if (ponto_virgula()):
+            adicionar_variavel(variaveis_semanticas, ler_token_anterior(), ler_token_tipo_variavel())
             return True
         else:
             raise EsperaPontoVirgulaExeception("Esperado ';' no lugar de '" + token[0] + "' na linha " + token[1])
@@ -467,7 +487,7 @@ def termo(opcional=False):
     global lista, i_token
     local_token = lista[i_token]
 
-    if (booleano(opcional=True) or identificador(opcional=True) or numero_inteiro(opcional=True)):
+    if (booleano(opcional=True) or identificador(opcional=True, checar_termo=True) or numero_inteiro(opcional=True)):
         proximo_token = ler_proximo_token()
         
         if (relacao(proximo_token)):

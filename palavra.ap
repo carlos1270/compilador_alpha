@@ -1,6 +1,7 @@
 prog ads2a;
 
     inteiro t;
+    x = t;
 
     func inteiro teste(inteiro a, inteiro b){
         se(a > b e b > 10){

@@ -1,4 +1,4 @@
-from src.Exceptions import AnaliseLexicaExeception, AnaliseSintaticaExeception
+from src.Exceptions import AnaliseLexicaExeception, AnaliseSintaticaExeception, AnaliseSemanticaException
 from src.analise_lexica import analise_lexica
 from src.analise_sintatica import analise_sintatica
 
@@ -17,4 +17,6 @@ try:
 except AnaliseLexicaExeception as e:
     print(e.get_message())
 except AnaliseSintaticaExeception as e:
+    print(e.get_message())
+except AnaliseSemanticaException as e:
     print(e.get_message())

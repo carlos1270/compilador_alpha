@@ -128,3 +128,11 @@ class ComandoDeRetornoDeValorInvalidoException(AnaliseSintaticaExeception):
 class ComandoIncondicionalInvalidoException(AnaliseSintaticaExeception):
     def __init__(self, message):
         super().__init__(message)
+
+class AnaliseSemanticaException(CustomizeExeception):
+    def __init__(self, message):
+        super().__init__("Erro de análise semântica: " + message)
+
+class VariavelNaoDeclaradaException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
