@@ -9,7 +9,7 @@ prog ads2a;
         se(a > b e b > 10){
             a = b + a;
         }senao{
-            retorno a; 
+            retorno b; 
         }
         inteiro ret;
         ret = a + b;
@@ -39,7 +39,7 @@ prog ads2a;
 
     t = 4;
     a = teste1();
-    atribuicao = teste(t, n);
+    a = teste(t, n);
     enquanto(t > 0){
         t = t - 1;
         n = 2;
@@ -57,7 +57,7 @@ prog ads2a;
                 ans = ans + 1;
                 cont = cont + 1;
                 pare;
-            }se(ent == algo){
+            }se(ent == cont){
                 cont = cont + 1;
             }senao{
                 cont = cont-1;

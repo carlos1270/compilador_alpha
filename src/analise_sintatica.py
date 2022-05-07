@@ -8,12 +8,13 @@ from src.analise_semantica_classes import *
 from src.analise_semantica import *
 
 def init(lista_tokens, tabela_simbolos):
-    global token, i_token, lista, simbolos, variaveis_semanticas
+    global token, i_token, lista, simbolos, variaveis_semanticas, funcoes_semanticas
     simbolos = tabela_simbolos
     i_token = 0
     lista = lista_tokens
     token = lista_tokens[i_token]
     variaveis_semanticas = VariavelHash()
+    funcoes_semanticas = FuncaoHash()
 
 def checar_comando_atribuicao(token):
     if ((token[0] == 'booleano') or (token[0] == 'inteiro') or (token[0] == 'const')):
@@ -67,6 +68,7 @@ def analise_sintatica(lista_tokens, tabela_simbolos):
     init(lista_tokens, tabela_simbolos)
     resultado = programa()
     variaveis_semanticas.print()
+    funcoes_semanticas.print()
     return resultado
 
 def tipo_valido(token):
@@ -88,7 +90,7 @@ def adicionar_simbolo(simbolo, token, tipo=None, escopo=None):
                     simbolo_ja_adicionado = True
             else:
                 simbolo_ja_adicionado = True
-    
+
     if (not(simbolo_ja_adicionado)): """
 
     simbolos.append(simbolo)
@@ -101,13 +103,20 @@ def adicionar_paramentro(id_func, parametro):
 
 def criar_simbolo(token, tipo=None, id_func=None, escopo=None):
     simbolo = Simbolo(token[0], escopo=escopo, linha=token[1])
-    
+
     if (simbolo.identificador != "#"):
         if (tipo_valido(lista[i_token - 1])):
-            simbolo.tipo = lista[i_token - 1][0]
+            #modificacao para adicionar o tipo do simbolo de declaracao de funcao com func:tipo e nao so o tipo
+            if(tipo != None):
+                if('func' in tipo):
+                    simbolo.tipo = tipo
+                else:
+                    simbolo.tipo = lista[i_token - 1][0]
+            else:
+                simbolo.tipo = lista[i_token - 1][0]
             adicionar_simbolo(simbolo, token)
         
-        if (tipo != None):
+        elif (tipo != None):
             simbolo.tipo = tipo
             adicionar_simbolo(simbolo, token, tipo=tipo)
 
@@ -121,7 +130,8 @@ def programa():
     else: 
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
-def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False):
+
+def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False, checa_funcao_declarada=False):
     global variaveis_semanticas
     
     if (token == None):
@@ -141,7 +151,7 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
                 return False
             else: 
                 raise IdentificadorInvalidoExeception("Identificador '" + token[0] + "' inválido na linha " + token[1])
-    
+
     criar_simbolo(token, tipo=tipo, id_func=id_func, escopo=escopo)
 
     """ Checagens semanticas """
@@ -149,6 +159,8 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
         checar_declaracao_semantica(variaveis_semanticas, token)
     if checar_atribuicao:
         checar_comando_atribuicao_semantica(variaveis_semanticas, token)
+    if checa_funcao_declarada:
+        checar_funcao_existente(funcoes_semanticas, token)
 
     return True
 
@@ -197,6 +209,7 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
                 return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
         elif(token[0] == 'retorno'):
             if(bloco_interno_funcao_retorno):
+                identificador(token=token, escopo=escopo)
                 comando_de_retorno_de_valor()
                 return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
             else:
@@ -316,25 +329,29 @@ def declaracao_de_sub_rotina(escopo=None):
 def declaracao_de_procedimento(escopo=None):
     global lista, i_token
 
-    if (identificador(tipo='proc:vazio', escopo=escopo) and abre_parenteses()):
+    if (identificador(tipo='proc:vazio', escopo=escopo, checa_funcao_declarada=True) and abre_parenteses()):
         token = ler_proximo_token()
+        adicionar_funcao(funcoes_semanticas, ler_token_anterior(), ler_token_tipo_variavel())
         if (token[0] == ')'):
             token = ler_token()
             return abre_chaves() and bloco(bloco_interno=True, escopo=escopo+':1') and fecha_chaves()
-        elif(parametros_formais(lista[i_token - 1]) and fecha_parenteses()):
+        elif(parametros_formais(lista[i_token - 1], escopo=escopo+':1') and fecha_parenteses()):
             return abre_chaves() and bloco(bloco_interno=True, escopo=escopo+':1') and fecha_chaves()
     else:
         return False
 
-def parametros_formais(id_func):
-    if (tipo() and identificador(id_func=id_func)):
+def parametros_formais(id_func, escopo=None):
+    global variaveis_semanticas, funcoes_semanticas
+    if (tipo() and identificador(id_func=id_func, escopo=escopo)):
+        adicionar_variavel(variaveis_semanticas, ler_token_atual(), ler_token_anterior())
+        adicionar_parametro(funcoes_semanticas, ler_token_atual())
         token = ler_proximo_token()
         if (token[0] == ')'):
             return True
         elif (token[0] == ','):
             token = ler_token()
 
-    return parametros_formais(id_func)
+    return parametros_formais(id_func, escopo=escopo)
 
 def abre_chaves():
     token = ler_token()
@@ -369,12 +386,13 @@ def fecha_parenteses():
 def declaracao_de_funcao(tipo, escopo=None):
     global lista, i_token
 
-    if (identificador(tipo='func:'+tipo, escopo=escopo) and abre_parenteses()):
+    if (identificador(tipo='func:'+tipo, escopo=escopo, checa_funcao_declarada=True) and abre_parenteses()):
         token = ler_proximo_token()
+        adicionar_funcao(funcoes_semanticas, ler_token_anterior(), ler_token_tipo_variavel())
         if (token[0] == ')'):
             token = ler_token()
             return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
-        elif(parametros_formais(lista[i_token - 1]) and fecha_parenteses()):
+        elif(parametros_formais(lista[i_token - 1], escopo=escopo+':1') and fecha_parenteses()):
             return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
     else:
         return False
@@ -405,6 +423,9 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
         comando_impressao_tela()
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
     elif (identificador(token=token, comando=True)):
+        global variaveis_semanticas
+        token = ler_token_atual()
+        checar_declaracao(variaveis_semanticas, token)
         comando_de_atribuicao()
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
     else:
@@ -540,11 +561,41 @@ def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None):
     return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo) and fecha_chaves()
 
 def comando_de_retorno_de_valor():
+    global variaveis_semanticas, simbolos, funcoes_semanticas
     if (checar_chamada(opcional=True)):
         return chamada() and ponto_virgula()
-    elif ((identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and ponto_virgula()):
-        return True
+    if(numero_inteiro(opcional=True)):
+        token = ler_token_anterior()
+        funcoes = list(funcoes_semanticas.funcoes)
+        funcao_semantica = funcoes_semanticas.funcoes[funcoes[len(funcoes)-1]]
 
+        if(not funcao_semantica.tipo == 1):
+            token = ler_token_atual()
+            raise RetornoInvalidoException("Tipo de retorno '" + token[0] + "' inválido na linha " + token[1])
+        if(ponto_virgula()):
+            return True
+    elif(booleano(opcional=True)):
+        token = ler_token_anterior()
+        funcoes = list(funcoes_semanticas.funcoes)
+        funcao_semantica = funcoes_semanticas.funcoes[funcoes[len(funcoes)-1]]
+
+        if(not funcao_semantica.tipo == 2):
+            token = ler_token_atual()
+            raise RetornoInvalidoException("Tipo de retorno '" + token[0] + "' inválido na linha " + token[1])
+        if(ponto_virgula()):
+            return True
+    elif (identificador(opcional=True)):
+        print('passou como identifcador')
+        token = ler_token_atual()
+        checar_declaracao(variaveis_semanticas, token)
+        variavel = variaveis_semanticas.variaveis[token[0]]
+        funcoes = list(funcoes_semanticas.funcoes)
+        funcao_semantica = funcoes_semanticas.funcoes[funcoes[len(funcoes)-1]]
+
+        if(not checar_tipos_variaveis(variavel, funcao_semantica)):
+            raise RetornoInvalidoException("Tipo de retorno '" + token[0] + "' inválido na linha " + token[1])
+        if(ponto_virgula()):
+            return True
     return False
 
 def comandos_de_desvio_incondicional():
