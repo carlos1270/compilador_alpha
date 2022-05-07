@@ -136,3 +136,16 @@ class AnaliseSemanticaException(CustomizeExeception):
 class VariavelNaoDeclaradaException(AnaliseSemanticaException):
     def __init__(self, message):
         super().__init__(message)
+
+class FuncaoNaoDeclaradaException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class FuncaoJaDeclaradaException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class RetornoInvalidoException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+        
