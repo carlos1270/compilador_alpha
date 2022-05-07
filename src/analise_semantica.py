@@ -135,3 +135,27 @@ def checar_declaracao_variavel_escopo(variaveis, funcoes, token_variavel, token_
 
     if variavel == None:
         raise VariavelNaoDeclaradaException("Variável '" + token_variavel[0] + "' não declarada na linha " + token_variavel[1])
+
+def checar_quantidade_parametros_passados(funcoes, nome_funcao, paramentros):
+    funcao = funcoes.get_funcao(nome_funcao)
+
+    if len(funcao.parametros) != len(paramentros):
+        raise QuantidadeParametrosDiferenteExeception("A função '" + nome_funcao + "' espera " + str(len(funcao.parametros)) + " parâmetros, mas foram pegos " + str(len(paramentros)))
+
+def parametros_funcao(nome_funcao, i_token, lista):
+    parametros = []
+    i = i_token
+    while (lista[i][0] != nome_funcao):
+        if (lista[i][0] != ',' and lista[i][0] != '(' and lista[i][0] != ')'):
+            parametros.append(lista[i][0])
+        i -= 1
+    parametros = list(reversed(parametros))
+    return parametros
+
+def checar_tipos_paramentros_passados(variaveis, funcoes, nome_funcao, paramentros):
+    funcao = funcoes.get_funcao(nome_funcao)
+
+    for i in range(len(funcao.parametros)):
+        variavel = variaveis.ultima_mesmo_escopo(funcao.lexval.escopo, paramentros[i])
+        if Funcao.get_tipo(funcao.parametros[i].tipo) != variavel.tipo:
+            raise TipoDeParametroDiferenteExeception("Parâmetro '" + funcao.parametros[i].identificador + "' deve ser do tipo " + funcao.parametros[i].tipo + ", mas foi passado um " + variavel.to_string_tipo())

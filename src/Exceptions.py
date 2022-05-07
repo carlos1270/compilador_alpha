@@ -152,3 +152,11 @@ class RetornoInvalidoException(AnaliseSemanticaException):
 class RetornoFuncaoTipoVariavelException(AnaliseSemanticaException):
     def __init__(self, message):
         super().__init__(message) 
+
+class QuantidadeParametrosDiferenteExeception(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message) 
+
+class TipoDeParametroDiferenteExeception(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message) 

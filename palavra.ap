@@ -1,8 +1,8 @@
 prog ads2a;
 
     inteiro t;
-    inteiro ret;
-    
+    booleano ret;
+    inteiro x;
 
     func inteiro teste(inteiro a, inteiro b){
         inteiro ret;
@@ -17,7 +17,7 @@ prog ads2a;
         retorno ret; 
     }
 
-    x = teste(t, x);
+    x = teste(t, ret);
     
     inteiro n;
     inteiro ent;

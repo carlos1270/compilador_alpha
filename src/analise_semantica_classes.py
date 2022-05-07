@@ -1,4 +1,4 @@
-from tkinter.messagebox import RETRY
+from tkinter.messagebox import NO, RETRY
 from wsgiref.validate import validator
 
 
@@ -66,7 +66,6 @@ class VariavelHash:
         return ultima
 
     def ultima_mesmo_escopo(self, escopo, nome):
-        """ Lembrar de comparar o escopo """
         ultima = None
         for i in range(len(self.variaveis)):
             if (self.variaveis[i].nome == nome):
@@ -101,6 +100,18 @@ class Funcao:
             return 'booleano'
         elif (self.tipo == Funcao.VAZIO):
             return 'void'
+
+        return None
+
+    def get_tipo(tipo):
+        if (tipo == 'inteiro'):
+            return Funcao.INTEGER
+        elif (tipo == 'booleano'):
+            return Funcao.BOLEANO
+        elif (tipo == 'vazio'):
+            return Funcao.VAZIO
+
+        return None
 
 class FuncaoHash:
     def __init__(self):

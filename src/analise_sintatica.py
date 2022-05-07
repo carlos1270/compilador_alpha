@@ -623,7 +623,7 @@ def comando_de_atribuicao():
             checar_declaracao_variavel_escopo(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             checar_funcao(funcoes_semanticas, token_atual)
             checar_tipo_funcao_atribuicao(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
-            retorno = chamada() and ponto_virgula()
+            retorno = chamada(token_atual[0]) and ponto_virgula()
             return retorno
         else:
             return expressao() and ponto_virgula()
@@ -711,8 +711,13 @@ def prox_eh_comando(token=None):
 
     return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True, checar_atribuicao=True))
 
-def chamada():
-    return abre_parenteses() and secao_parametros_passados() and fecha_parenteses()
+def chamada(nome_funcao):
+    global i_token, lista, funcoes_semanticas, variaveis_semanticas
+    
+    retorno = abre_parenteses() and secao_parametros_passados() and fecha_parenteses()
+    checar_quantidade_parametros_passados(funcoes_semanticas, nome_funcao, parametros_funcao(nome_funcao, i_token, lista))
+    checar_tipos_paramentros_passados(variaveis_semanticas, funcoes_semanticas, nome_funcao, parametros_funcao(nome_funcao, i_token, lista))
+    return retorno
 
 def secao_parametros_passados():
     if (identificador(opcional=True)):
