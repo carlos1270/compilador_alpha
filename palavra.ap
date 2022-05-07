@@ -2,16 +2,17 @@ prog ads2a;
 
     inteiro t;
     inteiro x;
-    
+    inteiro ret;
     x = t;
 
     func inteiro teste(inteiro a, inteiro b){
+        inteiro x;
         se(a > b e b > 10){
             a = b + a;
         }senao{
             retorno b; 
         }
-        inteiro ret;
+        
         ret = a + b;
         retorno ret; 
     }

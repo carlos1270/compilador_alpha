@@ -17,44 +17,52 @@ def checar_declaracao_semantica(variaveis, token):
     if not variaveis.exists(token[0]):
         raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' não declarada na linha " + token[1])
 
-def mesmo_escopo(variaveis, simbolo):
+def mesmo_escopo(variaveis, simbolo, funcao=False, funcoes_semanticas=None):
     lista_de_variaveis_declaradas = variaveis.lista_de_variaveis(simbolo.identificador)
     escopo_adicionado = simbolo.escopo.split(':')
 
-    for i in range(len(lista_de_variaveis_declaradas)):
-        escopo = list(lista_de_variaveis_declaradas[i].lexval.escopo.split(':'))
-        if(len(escopo_adicionado) <= len(escopo)):
-            if(escopo_adicionado[:] == escopo[:len(escopo_adicionado)]):
-                return True
-        else:
-            if escopo[0] == '1':
-                return True
-
+    if funcao:
+        func = funcoes_semanticas.last()
+        print("ENTRANDO EM FUNCAO")
+        for i in range(len(lista_de_variaveis_declaradas)):
+            escopo = list(lista_de_variaveis_declaradas[i].lexval.escopo.split(':'))
+            if(len(escopo_adicionado) <= len(escopo)):
+                if(escopo_adicionado[:] == escopo[:len(escopo_adicionado)]):
+                    return True
+    else:
+        for i in range(len(lista_de_variaveis_declaradas)):
+            escopo = list(lista_de_variaveis_declaradas[i].lexval.escopo.split(':'))
+            if(len(escopo_adicionado) <= len(escopo)):
+                if(escopo_adicionado[:] == escopo[:len(escopo_adicionado)]):
+                    return True
+            else:
+                if escopo[0] == '1':
+                    return True
     
     return False 
 
-def checar_ja_declarada(variaveis, token, simbolo):
-    if variaveis.exists(token[0]) and mesmo_escopo(variaveis, simbolo):
+def checar_ja_declarada(variaveis, token, simbolo, funcoes_semanticas=None, funcao=False):
+    if variaveis.exists(token[0]) and mesmo_escopo(variaveis, simbolo, funcao=funcao, funcoes_semanticas=funcoes_semanticas):
         raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' já declarada na linha " + token[1])
 
-def adicionar_funcao(funcoes, token, tipo):
+def adicionar_funcao(funcoes, token, tipo, simbolo):
     funcao = None
     if tipo[0] == "inteiro":
-        funcao = Funcao(token[0], Funcao.INTEGER, None, token)
+        funcao = Funcao(token[0], Funcao.INTEGER, None, simbolo)
     elif tipo[0] == "booleano":
-        funcao = Funcao(token[0], Funcao.BOLEANO, None, token)
+        funcao = Funcao(token[0], Funcao.BOLEANO, None, simbolo)
     elif tipo[0] == "vazio":
-        funcao = Funcao(token[0], Funcao.VAZIO, None, token)
+        funcao = Funcao(token[0], Funcao.VAZIO, None, simbolo)
 
     funcoes.add(funcao)
 
-def adicionar_parametro(funcoes, token):
+def adicionar_parametro(funcoes, simbolo):
     funcao = list(funcoes.funcoes)[-1]
     parametros = funcoes.funcoes[funcao].parametros
     if(parametros == None):
-        parametros = [token[0]]
+        parametros = [simbolo]
     else:
-        parametros.append(token[0])
+        parametros.append(simbolo)
 
     funcoes.funcoes[funcao].parametros = parametros
 
@@ -88,7 +96,25 @@ def get_simbolo_pai_funcao(simbolos, filho):
             if(escopo[:] == escopo_filho[:len(escopo)]):
                 return simbolo
     return None
+""" 
+def checar_ja_declarada(variaveis, token, tipo, ):
+    if variaveis.exists(token[0]) and mesmo_escopo(token, funcao):
+        raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' já declarada na linha " + token[1]) """
 
-def checar_ja_declarada(variaveis, token, tipo):
-    if variaveis.exists(token[0]) and mesmo_escopo(token):
-        raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' não declarada na linha " + token[1])
+
+def checar_declaracao_funcao_semantica(variaveis, token, funcoes_semanticas):
+    escopo_funcao = funcoes_semanticas.last().lexval.escopo.split(':')
+    lista_de_identificadores = variaveis.lista_de_variaveis(token[0])
+    for simbolo in lista_de_identificadores:
+        escopo = list(simbolo.lexval.escopo.split(':'))
+        if(len(escopo_funcao)+1 <= len(escopo)):
+            if(escopo_funcao[:] == escopo[:len(escopo_funcao)]):
+                return True
+    return False
+
+def varificar_tipo_retorno_funcao(variaveis, token, funcoes):
+    variavel = variaveis.ultima_declarada(token[0])
+    funcoes = funcoes.last()
+
+    if(not checar_tipos_variaveis(variavel, funcoes)):
+        raise RetornoInvalidoException("Tipo de retorno '" + token[0] + "' inválido na linha " + token[1])

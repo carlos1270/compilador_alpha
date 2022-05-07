@@ -52,6 +52,13 @@ class VariavelHash:
 
         return lista
 
+    def ultima_declarada(self, nome):
+        ultima = None
+        for i in range(len(self.variaveis)):
+            if (self.variaveis[i].nome == nome):
+                ultima = self.variaveis[i]
+        return ultima
+
 class Funcao:
     INTEGER = 1
     BOLEANO = 2
@@ -68,7 +75,6 @@ class Funcao:
 
 
 class FuncaoHash:
-
     def __init__(self):
         self.funcoes = {}
     
@@ -85,4 +91,10 @@ class FuncaoHash:
         return nome in self.funcoes
 
     def size(self):
-        return len(self.funcoes)   
+        return len(self.funcoes)  
+
+    def last(self):
+        ultima = None
+        for var in self.funcoes:
+            ultima = self.funcoes[var]
+        return ultima

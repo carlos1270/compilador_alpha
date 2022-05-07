@@ -131,8 +131,8 @@ def programa():
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
 
-def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False, checa_funcao_declarada=False):
-    global variaveis_semanticas
+def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False, checa_funcao_declarada=False, checar_declaracao_funcao=False, bloco_interno_funcao_retorno=False):
+    global variaveis_semanticas, funcoes_semanticas
     
     if (token == None):
         token = ler_token()
@@ -161,6 +161,11 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
         checar_comando_atribuicao_semantica(variaveis_semanticas, token)
     if checa_funcao_declarada:
         checar_funcao_existente(funcoes_semanticas, token)
+    if checar_declaracao_funcao:
+        checar_declaracao_funcao_semantica(variaveis_semanticas, token, funcoes_semanticas)
+    if bloco_interno_funcao_retorno:
+        checar_ja_declarada(variaveis_semanticas, token, None, funcoes_semanticas=funcoes_semanticas, funcao=bloco_interno_funcao_retorno)
+        
 
     return True
 
@@ -327,11 +332,11 @@ def declaracao_de_sub_rotina(escopo=None):
         raise TipoDeSubRotinaInvalidaException("Tipo '" + token[0] + "' de sub-rotina inválida na linha " + token[1])
 
 def declaracao_de_procedimento(escopo=None):
-    global lista, i_token
+    global lista, i_token, simbolos
 
     if (identificador(tipo='proc:vazio', escopo=escopo, checa_funcao_declarada=True) and abre_parenteses()):
         token = ler_proximo_token()
-        adicionar_funcao(funcoes_semanticas, ler_token_anterior(), ler_token_tipo_variavel())
+        adicionar_funcao(funcoes_semanticas, ler_token_anterior(), ler_token_tipo_variavel(), simbolos[len(simbolos) - 1])
         if (token[0] == ')'):
             token = ler_token()
             return abre_chaves() and bloco(bloco_interno=True, escopo=escopo+':1') and fecha_chaves()
@@ -341,10 +346,10 @@ def declaracao_de_procedimento(escopo=None):
         return False
 
 def parametros_formais(id_func, escopo=None):
-    global variaveis_semanticas, funcoes_semanticas
+    global variaveis_semanticas, funcoes_semanticas, simbolos
     if (tipo() and identificador(id_func=id_func, escopo=escopo)):
-        adicionar_variavel(variaveis_semanticas, ler_token_atual(), ler_token_anterior())
-        adicionar_parametro(funcoes_semanticas, ler_token_atual())
+        adicionar_variavel(variaveis_semanticas, ler_token_atual(), ler_token_anterior(), simbolos[len(simbolos) - 1])
+        adicionar_parametro(funcoes_semanticas, simbolos[len(simbolos) - 1])
         token = ler_proximo_token()
         if (token[0] == ')'):
             return True
@@ -384,11 +389,11 @@ def fecha_parenteses():
         raise EsperadoParentesesExeception("Esperado ')' ao invés de '" + token[0] + "' na linha " + token[1])
 
 def declaracao_de_funcao(tipo, escopo=None):
-    global lista, i_token
+    global lista, i_token, simbolos
 
     if (identificador(tipo='func:'+tipo, escopo=escopo, checa_funcao_declarada=True) and abre_parenteses()):
         token = ler_proximo_token()
-        adicionar_funcao(funcoes_semanticas, ler_token_anterior(), ler_token_tipo_variavel())
+        adicionar_funcao(funcoes_semanticas, ler_token_anterior(), ler_token_tipo_variavel(), simbolos[len(simbolos) - 1])
         if (token[0] == ')'):
             token = ler_token()
             return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
@@ -422,10 +427,9 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
     elif (token[0] == 'exibir'):
         comando_impressao_tela()
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
-    elif (identificador(token=token, comando=True)):
+    elif (identificador(token=token, comando=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)):
         global variaveis_semanticas
         token = ler_token_atual()
-        checar_declaracao(variaveis_semanticas, token)
         comando_de_atribuicao()
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
     else:
@@ -584,16 +588,11 @@ def comando_de_retorno_de_valor():
             raise RetornoInvalidoException("Tipo de retorno '" + token[0] + "' inválido na linha " + token[1])
         if(ponto_virgula()):
             return True
-    elif (identificador(opcional=True)):
+    elif (identificador(opcional=True, checar_declaracao_funcao=True)):
         print('passou como identifcador')
         token = ler_token_atual()
-        checar_declaracao(variaveis_semanticas, token)
-        variavel = variaveis_semanticas.variaveis[token[0]]
-        funcoes = list(funcoes_semanticas.funcoes)
-        funcao_semantica = funcoes_semanticas.funcoes[funcoes[len(funcoes)-1]]
-
-        if(not checar_tipos_variaveis(variavel, funcao_semantica)):
-            raise RetornoInvalidoException("Tipo de retorno '" + token[0] + "' inválido na linha " + token[1])
+        varificar_tipo_retorno_funcao(variaveis_semanticas, token, funcoes_semanticas)
+        
         if(ponto_virgula()):
             return True
     return False
