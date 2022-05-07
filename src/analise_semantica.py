@@ -121,3 +121,17 @@ def varificar_tipo_retorno_funcao(variaveis, token, funcoes):
 
     if(not checar_tipos_variaveis(variavel, funcoes)):
         raise RetornoInvalidoException("Tipo de retorno '" + token[0] + "' inválido na linha " + token[1])
+
+def checar_tipo_funcao_atribuicao(variaveis, funcoes, token_variavel, token_funcao):
+    funcao = funcoes.get_funcao(token_funcao[0])
+    variavel = variaveis.ultima_mesmo_escopo(funcao.lexval.escopo, token_variavel[0])
+
+    if (funcao.tipo != variavel.tipo):
+        raise RetornoFuncaoTipoVariavelException("A função '" + funcao.nome + "' retorna um " + funcao.to_string_tipo() + " mas '" + variavel.nome + "' é do tipo " + variavel.to_string_tipo())
+
+def checar_declaracao_variavel_escopo(variaveis, funcoes, token_variavel, token_funcao):
+    funcao = funcoes.get_funcao(token_funcao[0])
+    variavel = variaveis.ultima_mesmo_escopo(funcao.lexval.escopo, token_variavel[0])
+
+    if variavel == None:
+        raise VariavelNaoDeclaradaException("Variável '" + token_variavel[0] + "' não declarada na linha " + token_variavel[1])

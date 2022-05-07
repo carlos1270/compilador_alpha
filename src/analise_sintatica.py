@@ -614,11 +614,17 @@ def comando_impressao_tela():
     return False
 
 def comando_de_atribuicao():
+    global variaveis_semanticas, funcoes_semanticas, lista, i_token
     token_atual = ler_token_atual()
 
     if (atribuicao()):
         if (checar_chamada(opcional=True)):
-            return chamada() and ponto_virgula()
+            token_atual = ler_token_atual()
+            checar_declaracao_variavel_escopo(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
+            checar_funcao(funcoes_semanticas, token_atual)
+            checar_tipo_funcao_atribuicao(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
+            retorno = chamada() and ponto_virgula()
+            return retorno
         else:
             return expressao() and ponto_virgula()
     else:

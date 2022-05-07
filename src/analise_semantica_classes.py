@@ -15,6 +15,12 @@ class Variavel:
     def print(self):
         print("Variavel: " + str(self.nome) + ", Valor: " + str(self.valor) + ", Tipo: " + str(self.tipo) + ", Lexval: " + str(self.lexval))
 
+    def to_string_tipo(self):
+        if (self.tipo == Variavel.INTEGER):
+            return 'inteiro'
+        elif (self.tipo == Variavel.BOLEANO):
+            return 'booleano'
+
 class VariavelHash:
     def __init__(self):
         self.variaveis = []
@@ -59,6 +65,21 @@ class VariavelHash:
                 ultima = self.variaveis[i]
         return ultima
 
+    def ultima_mesmo_escopo(self, escopo, nome):
+        """ Lembrar de comparar o escopo """
+        ultima = None
+        for i in range(len(self.variaveis)):
+            if (self.variaveis[i].nome == nome):
+                variavel = self.variaveis[i]
+                escopo_variavel = variavel.lexval.escopo.split(':')
+                escopo_desejado = escopo.split(':')
+
+                if(len(escopo_variavel) <= len(escopo_desejado)):
+                    if (escopo_variavel[:] == escopo_desejado[:len(escopo_variavel)]) or (len(escopo_desejado) == len(escopo_variavel) and escopo_variavel[0] == '1'):
+                        ultima = variavel
+
+        return ultima
+
 class Funcao:
     INTEGER = 1
     BOLEANO = 2
@@ -73,6 +94,13 @@ class Funcao:
     def print(self):
         print("Variavel: " + str(self.nome) + ", Tipo: " + str(self.tipo) + ", Parametros: " + str(self.parametros) + ", Lexval: " + str(self.lexval))
 
+    def to_string_tipo(self):
+        if (self.tipo == Funcao.INTEGER):
+            return 'inteiro'
+        elif (self.tipo == Funcao.BOLEANO):
+            return 'booleano'
+        elif (self.tipo == Funcao.VAZIO):
+            return 'void'
 
 class FuncaoHash:
     def __init__(self):
@@ -98,3 +126,6 @@ class FuncaoHash:
         for var in self.funcoes:
             ultima = self.funcoes[var]
         return ultima
+
+    def get_funcao(self, nome):
+        return self.funcoes[nome]

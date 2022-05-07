@@ -148,4 +148,7 @@ class FuncaoJaDeclaradaException(AnaliseSemanticaException):
 class RetornoInvalidoException(AnaliseSemanticaException):
     def __init__(self, message):
         super().__init__(message)
-        
+
+class RetornoFuncaoTipoVariavelException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message) 
