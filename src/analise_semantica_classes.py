@@ -1,3 +1,4 @@
+from tkinter.messagebox import RETRY
 from wsgiref.validate import validator
 
 
@@ -15,12 +16,11 @@ class Variavel:
         print("Variavel: " + str(self.nome) + ", Valor: " + str(self.valor) + ", Tipo: " + str(self.tipo) + ", Lexval: " + str(self.lexval))
 
 class VariavelHash:
-
     def __init__(self):
-        self.variaveis = {}
+        self.variaveis = []
     
     def add(self, varivel):
-        self.variaveis[varivel.nome] = varivel
+        self.variaveis.append(varivel)
 
     def print(self):
         print("========================= SEMANTICA ===========================")
@@ -29,7 +29,25 @@ class VariavelHash:
         print("========================= X SEMANTICA X ===========================")
 
     def exists(self, nome):
-        return nome in self.variaveis
+        for i in range(len(self.variaveis)):
+            if nome == self.variaveis[i].nome:
+                return True
+
+        return False
 
     def size(self):
-        return len(self.variaveis)    
+        return len(self.variaveis)   
+
+    def last(self):
+        ultima = None
+        for var in self.variaveis:
+            ultima = self.variaveis[var]
+        return ultima
+
+    def lista_de_variaveis(self, nome):
+        lista = []
+        for i in range(len(self.variaveis)):
+            if nome == self.variaveis[i].nome:
+                lista.append(self.variaveis[i])
+
+        return lista

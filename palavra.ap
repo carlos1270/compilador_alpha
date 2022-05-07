@@ -1,6 +1,8 @@
 prog ads2a;
 
     inteiro t;
+    inteiro x;
+    
     x = t;
 
     func inteiro teste(inteiro a, inteiro b){

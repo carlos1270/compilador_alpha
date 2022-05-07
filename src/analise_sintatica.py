@@ -8,7 +8,7 @@ from src.analise_semantica_classes import *
 from src.analise_semantica import *
 
 def init(lista_tokens, tabela_simbolos):
-    global token, i_token, lista, pilha, simbolos, variaveis_semanticas
+    global token, i_token, lista, simbolos, variaveis_semanticas
     simbolos = tabela_simbolos
     i_token = 0
     lista = lista_tokens
@@ -43,7 +43,7 @@ def ler_token():
         i_token -= 1
         return lista[len(lista) - 1]
     
-    """ print(lista[i_token]) """
+    print(lista[i_token])
     return lista[i_token]
 
 def ler_proximo_token():
@@ -80,8 +80,7 @@ def tipo_valido(token):
 
 def adicionar_simbolo(simbolo, token, tipo=None, escopo=None):
     global simbolos
-    simbolo_ja_adicionado = False
-    
+    """ simbolo_ja_adicionado = False
     for i in range(len(simbolos)):
         if (simbolos[i].identificador == token[0]):
             if (tipo != None):
@@ -90,8 +89,9 @@ def adicionar_simbolo(simbolo, token, tipo=None, escopo=None):
             else:
                 simbolo_ja_adicionado = True
     
-    if (not(simbolo_ja_adicionado)):
-        simbolos.append(simbolo)
+    if (not(simbolo_ja_adicionado)): """
+
+    simbolos.append(simbolo)
 
 def adicionar_paramentro(id_func, parametro):
     global simbolos
@@ -121,7 +121,7 @@ def programa():
     else: 
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
-def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False):
+def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False):
     global variaveis_semanticas
     
     if (token == None):
@@ -146,7 +146,9 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
 
     """ Checagens semanticas """
     if checar_termo:
-        checar_declaracao(variaveis_semanticas, token)
+        checar_declaracao_semantica(variaveis_semanticas, token)
+    if checar_atribuicao:
+        checar_comando_atribuicao_semantica(variaveis_semanticas, token)
 
     return True
 
@@ -289,10 +291,11 @@ def booleano(opcional=False):
             raise BooleanoInvalidoException("Booleano '" + token[0] + "' inválido na linha " + token[1])
 
 def declaracao_de_variavel(escopo=None):
-    global token, variaveis_semanticas
+    global token, variaveis_semanticas, simbolos
     if (identificador(escopo=escopo)):
         if (ponto_virgula()):
-            adicionar_variavel(variaveis_semanticas, ler_token_anterior(), ler_token_tipo_variavel())
+            checar_ja_declarada(variaveis_semanticas, ler_token_anterior(), simbolos[len(simbolos) - 1])
+            adicionar_variavel(variaveis_semanticas, ler_token_anterior(), ler_token_tipo_variavel(), simbolos[len(simbolos) - 1])
             return True
         else:
             raise EsperaPontoVirgulaExeception("Esperado ';' no lugar de '" + token[0] + "' na linha " + token[1])
@@ -613,7 +616,8 @@ def expressao_numerica():
     token = ler_token_atual()
     if(eh_booleano()):
         return False
-    elif (identificador(opcional=True) or numero_inteiro(opcional=True)):
+    elif (identificador(opcional=True, checar_atribuicao=True) or numero_inteiro(opcional=True)):
+        print("aaaa")
         return True
     else:
         if(relacao(token=token) or eh_operador()):
@@ -645,7 +649,7 @@ def prox_eh_comando(token=None):
     elif(token[0] == 'func'):
         return False
 
-    return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True))
+    return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True, checar_atribuicao=True))
 
 def chamada():
     return abre_parenteses() and secao_parametros_passados() and fecha_parenteses()
