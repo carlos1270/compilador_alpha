@@ -24,8 +24,8 @@ class VariavelHash:
 
     def print(self):
         print("========================= SEMANTICA ===========================")
-        for i in self.variaveis:
-            self.variaveis[i].print()
+        for variavel in self.variaveis:
+            variavel.print()
         print("========================= X SEMANTICA X ===========================")
 
     def exists(self, nome):
@@ -41,7 +41,7 @@ class VariavelHash:
     def last(self):
         ultima = None
         for var in self.variaveis:
-            ultima = self.variaveis[var]
+            ultima = var
         return ultima
 
     def lista_de_variaveis(self, nome):

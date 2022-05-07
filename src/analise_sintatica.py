@@ -162,9 +162,12 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
     if checa_funcao_declarada:
         checar_funcao_existente(funcoes_semanticas, token)
     if checar_declaracao_funcao:
-        checar_declaracao_funcao_semantica(variaveis_semanticas, token, funcoes_semanticas)
+        if(not checar_declaracao_funcao_semantica(variaveis_semanticas, token, funcoes_semanticas)):
+           raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' não declarada na linha " + token[1])
+
     if bloco_interno_funcao_retorno:
-        checar_ja_declarada(variaveis_semanticas, token, None, funcoes_semanticas=funcoes_semanticas, funcao=bloco_interno_funcao_retorno)
+        if(not comando):
+            checar_ja_declarada(variaveis_semanticas, token, None, funcoes_semanticas=funcoes_semanticas, funcao=bloco_interno_funcao_retorno)
         
 
     return True
@@ -198,10 +201,10 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
         return True
     else:
         if (token[0] == 'const'):
-            declaracao_de_constante(escopo=escopo)
+            declaracao_de_constante(escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
             return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
         elif(token[0] == 'inteiro' or token[0] == 'booleano'):
-            declaracao_de_variavel(escopo=escopo)
+            declaracao_de_variavel(escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
             return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
 
         elif(token[0] == 'func'):
@@ -308,11 +311,12 @@ def booleano(opcional=False):
         else:
             raise BooleanoInvalidoException("Booleano '" + token[0] + "' inválido na linha " + token[1])
 
-def declaracao_de_variavel(escopo=None):
+def declaracao_de_variavel(escopo=None, bloco_interno_funcao_retorno=False):
     global token, variaveis_semanticas, simbolos
-    if (identificador(escopo=escopo)):
+    if (identificador(escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)):
         if (ponto_virgula()):
-            checar_ja_declarada(variaveis_semanticas, ler_token_anterior(), simbolos[len(simbolos) - 1])
+            if(not bloco_interno_funcao_retorno):
+                checar_ja_declarada(variaveis_semanticas, ler_token_anterior(), simbolos[len(simbolos) - 1])
             adicionar_variavel(variaveis_semanticas, ler_token_anterior(), ler_token_tipo_variavel(), simbolos[len(simbolos) - 1])
             return True
         else:

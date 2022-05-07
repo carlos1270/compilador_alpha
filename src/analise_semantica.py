@@ -17,23 +17,26 @@ def checar_declaracao_semantica(variaveis, token):
     if not variaveis.exists(token[0]):
         raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' não declarada na linha " + token[1])
 
-def mesmo_escopo(variaveis, simbolo, funcao=False, funcoes_semanticas=None):
+def mesmo_escopo(variaveis, token, simbolo, funcao=False, funcoes_semanticas=None):
+    if(simbolo == None):
+        simbolo = variaveis.ultima_declarada(token[0]).lexval
+        simbolo.print()
     lista_de_variaveis_declaradas = variaveis.lista_de_variaveis(simbolo.identificador)
     escopo_adicionado = simbolo.escopo.split(':')
 
     if funcao:
         func = funcoes_semanticas.last()
-        print("ENTRANDO EM FUNCAO")
-        for i in range(len(lista_de_variaveis_declaradas)):
-            escopo = list(lista_de_variaveis_declaradas[i].lexval.escopo.split(':'))
-            if(len(escopo_adicionado) <= len(escopo)):
-                if(escopo_adicionado[:] == escopo[:len(escopo_adicionado)]):
-                    return True
+        escopo_funcao = func.lexval.escopo.split(':')
+        escopo_funcao.append('1')
+        if(escopo_funcao == escopo_adicionado):
+            return True
     else:
         for i in range(len(lista_de_variaveis_declaradas)):
             escopo = list(lista_de_variaveis_declaradas[i].lexval.escopo.split(':'))
             if(len(escopo_adicionado) <= len(escopo)):
                 if(escopo_adicionado[:] == escopo[:len(escopo_adicionado)]):
+                    return True
+                if len(escopo_adicionado) == len(escopo) and escopo[0] == '1':
                     return True
             else:
                 if escopo[0] == '1':
@@ -42,7 +45,7 @@ def mesmo_escopo(variaveis, simbolo, funcao=False, funcoes_semanticas=None):
     return False 
 
 def checar_ja_declarada(variaveis, token, simbolo, funcoes_semanticas=None, funcao=False):
-    if variaveis.exists(token[0]) and mesmo_escopo(variaveis, simbolo, funcao=funcao, funcoes_semanticas=funcoes_semanticas):
+    if variaveis.exists(token[0]) and mesmo_escopo(variaveis, token, simbolo, funcao=funcao, funcoes_semanticas=funcoes_semanticas):
         raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' já declarada na linha " + token[1])
 
 def adicionar_funcao(funcoes, token, tipo, simbolo):
