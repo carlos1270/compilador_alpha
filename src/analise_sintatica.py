@@ -104,14 +104,6 @@ def adicionar_paramentro(id_func, parametro):
 def criar_simbolo(token, tipo=None, id_func=None, escopo=None):
     simbolo = Simbolo(token[0], escopo=escopo, linha=token[1])
 
-    #é necessario um identificador (ou outro tipo de dado) de retorno para retornos onde esta sendo retornado um booleano ou inteiro (que nao sao identificadores)
-    #pq eles nao sao registrados em identificadores e entao nao se sabe o escopo deles
-
-    if(token[0] == 'retorno'):
-        simbolo.tipo = tipo
-        simbolo.identificador = 'retorno'
-        adicionar_simbolo(simbolo, token, tipo=tipo)
-    
     if (simbolo.identificador != "#"):
         if (tipo_valido(lista[i_token - 1])):
             #modificacao para adicionar o tipo do simbolo de declaracao de funcao com func:tipo e nao so o tipo
@@ -570,7 +562,8 @@ def comando_de_retorno_de_valor():
         return chamada() and ponto_virgula()
     if(numero_inteiro(opcional=True)):
         token = ler_token_anterior()
-        funcao_semantica = funcoes_semanticas.funcoes[get_simbolo_pai_funcao(simbolos, get_simbolo_pelo_identificador_token(simbolos, token)).identificador]
+        funcoes = list(funcoes_semanticas.funcoes)
+        funcao_semantica = funcoes_semanticas.funcoes[funcoes[len(funcoes)-1]]
 
         if(not funcao_semantica.tipo == 1):
             token = ler_token_atual()
@@ -579,7 +572,8 @@ def comando_de_retorno_de_valor():
             return True
     elif(booleano(opcional=True)):
         token = ler_token_anterior()
-        funcao_semantica = funcoes_semanticas.funcoes[get_simbolo_pai_funcao(simbolos, get_simbolo_pelo_identificador_token(simbolos, token)).identificador]
+        funcoes = list(funcoes_semanticas.funcoes)
+        funcao_semantica = funcoes_semanticas.funcoes[funcoes[len(funcoes)-1]]
 
         if(not funcao_semantica.tipo == 2):
             token = ler_token_atual()
@@ -591,7 +585,8 @@ def comando_de_retorno_de_valor():
         token = ler_token_atual()
         checar_declaracao(variaveis_semanticas, token)
         variavel = variaveis_semanticas.variaveis[token[0]]
-        funcao_semantica = funcoes_semanticas.funcoes[get_simbolo_pai_funcao(simbolos, get_simbolo_pelo_identificador_token(simbolos, token)).identificador]
+        funcoes = list(funcoes_semanticas.funcoes)
+        funcao_semantica = funcoes_semanticas.funcoes[funcoes[len(funcoes)-1]]
 
         if(not checar_tipos_variaveis(variavel, funcao_semantica)):
             raise RetornoInvalidoException("Tipo de retorno '" + token[0] + "' inválido na linha " + token[1])
