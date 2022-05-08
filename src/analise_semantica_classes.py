@@ -146,3 +146,12 @@ class FuncaoHash:
 
     def get_funcao(self, nome):
         return self.funcoes[nome]
+
+    def exists_procedimento(self, nome):
+        if (not(nome in self.funcoes)):
+            return False
+
+        funcao = self.funcoes[nome]
+        if funcao.tipo == Funcao.VAZIO:
+            return True
+        return False

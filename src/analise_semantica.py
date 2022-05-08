@@ -179,3 +179,7 @@ def checar_tipo_constante_variavel(simbolo, variaveis, escopo, token_variavel):
 
     if variavel.tipo != Variavel.get_tipo(simbolo.tipo):
         raise TipoAtribuicaoConstanteException("Constante '"+ simbolo.identificador +"' na linha " + str(simbolo.linha) + " é declarada como " + simbolo.tipo + ", mas atribuindo um valor "+ variavel.to_string_tipo() +".")
+
+def checar_procedimento_declarado(funcoes, token):
+    if not funcoes.exists_procedimento(token[0]):
+        raise FuncaoNaoDeclaradaException("Procedimento '" + token[0] + "' não declarado na linha " + token[1])

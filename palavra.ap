@@ -3,7 +3,7 @@ prog ads2a;
     inteiro t;
     booleano ret;
     inteiro x;
-    const inteiro a = ret;
+    const inteiro a = t;
 
     func inteiro teste(inteiro a, inteiro b){
         inteiro ret;
@@ -17,5 +17,13 @@ prog ads2a;
         ret = a + b;
         retorno ret; 
     }
+
+    func vazio procedi(inteiro a) {
+        inteiro c;
+        a = c;
+    }
+
+    
+    a = test(t);
 
     ret = 1;

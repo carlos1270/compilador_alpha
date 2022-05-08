@@ -440,6 +440,13 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
     elif (token[0] == 'exibir'):
         comando_impressao_tela()
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+    elif(comando_chamada_procedimento(opcional=True)):
+        token_atual = ler_token_atual()
+        if (chamada(token_atual[0], procedimento=True)): 
+            ponto_virgula()
+
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+    
     elif (identificador(token=token, comando=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)):
         global variaveis_semanticas
         token = ler_token_atual()
@@ -625,12 +632,11 @@ def comando_impressao_tela():
 def comando_de_atribuicao():
     global variaveis_semanticas, funcoes_semanticas, lista, i_token
     token_atual = ler_token_atual()
-
     if (atribuicao()):
         if (checar_chamada(opcional=True)):
             token_atual = ler_token_atual()
-            checar_declaracao_variavel_escopo(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             checar_funcao(funcoes_semanticas, token_atual)
+            checar_declaracao_variavel_escopo(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             checar_tipo_funcao_atribuicao(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             retorno = chamada(token_atual[0]) and ponto_virgula()
             return retorno
@@ -718,11 +724,14 @@ def prox_eh_comando(token=None):
     elif(token[0] == 'func'):
         return False
 
-    return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (identificador(token=token, comando=True, checar_atribuicao=True))
+    return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (comando_chamada_procedimento(opcional=True)) or (identificador(token=token, comando=True, checar_atribuicao=True))
 
-def chamada(nome_funcao):
+def chamada(nome_funcao, procedimento=False):
     global i_token, lista, funcoes_semanticas, variaveis_semanticas
     
+    if procedimento:
+        checar_procedimento_declarado(funcoes_semanticas, lista[i_token])
+
     retorno = abre_parenteses() and secao_parametros_passados() and fecha_parenteses()
     checar_quantidade_parametros_passados(funcoes_semanticas, nome_funcao, parametros_funcao(nome_funcao, i_token, lista))
     checar_tipos_paramentros_passados(variaveis_semanticas, funcoes_semanticas, nome_funcao, parametros_funcao(nome_funcao, i_token, lista))
@@ -754,3 +763,15 @@ def checar_chamada(opcional=False):
             return False
     else:
         return False
+
+def comando_chamada_procedimento(opcional=False):
+    global lista, i_token
+    token = lista[i_token]
+    prox_token = ler_proximo_token()
+    if (identificador(opcional=opcional, token=token) and prox_token[0] == "("):
+        return True
+    
+    if (opcional):
+        return False
+    else:
+        raise EsperadoParentesesExeception("Esperado '(' ao invés de '" + token[0] + "' na linha " + token[1])
