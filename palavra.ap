@@ -3,6 +3,7 @@ prog ads2a;
     inteiro t;
     booleano ret;
     inteiro x;
+    const inteiro a = ret;
 
     func inteiro teste(inteiro a, inteiro b){
         inteiro ret;
@@ -17,54 +18,4 @@ prog ads2a;
         retorno ret; 
     }
 
-    x = teste(t, ret);
-    
-    inteiro n;
-    inteiro ent;
-    inteiro cont;
-
-    func vazio teste1(booleano a, inteiro b) {
-        inteiro uc;
-        a = b;
-        se(verdadeiro){
-            inteiro ohnizuc;
-            se(ohnizuc){
-                inteiro uemoc;
-            }senao{
-                inteiro uozog;
-            }
-        }senao{
-            inteiro palhacinho;
-        }
-    }
-
-    inteiro ans;
-
-    t = 4;
-    a = teste1();
-    a = teste(t, n);
-    enquanto(t > 0){
-        t = t - 1;
-        n = 2;
-        ent = 2;
-        cont = 0;
-        ans = 0;
-
-        inteiro k;
-        k = 2;
-
-        enquanto(k > 0){
-            k = k - 1;
-            se(cont < 0){
-                inteiro vei;
-                ans = ans + 1;
-                cont = cont + 1;
-                pare;
-            }se(ent == cont){
-                cont = cont + 1;
-            }senao{
-                cont = cont-1;
-            }
-        }
-        exibir(ans);
-    }
+    ret = 1;

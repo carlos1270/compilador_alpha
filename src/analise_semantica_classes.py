@@ -21,6 +21,12 @@ class Variavel:
         elif (self.tipo == Variavel.BOLEANO):
             return 'booleano'
 
+    def get_tipo(tipo):
+        if (tipo == 'inteiro'):
+            return Variavel.INTEGER
+        elif (tipo == 'booleano'):
+            return Variavel.BOLEANO
+
 class VariavelHash:
     def __init__(self):
         self.variaveis = []

@@ -20,7 +20,7 @@ def checar_declaracao_semantica(variaveis, token):
 def mesmo_escopo(variaveis, token, simbolo, funcao=False, funcoes_semanticas=None):
     if(simbolo == None):
         simbolo = variaveis.ultima_declarada(token[0]).lexval
-        simbolo.print()
+
     lista_de_variaveis_declaradas = variaveis.lista_de_variaveis(simbolo.identificador)
     escopo_adicionado = simbolo.escopo.split(':')
 
@@ -159,3 +159,23 @@ def checar_tipos_paramentros_passados(variaveis, funcoes, nome_funcao, paramentr
         variavel = variaveis.ultima_mesmo_escopo(funcao.lexval.escopo, paramentros[i])
         if Funcao.get_tipo(funcao.parametros[i].tipo) != variavel.tipo:
             raise TipoDeParametroDiferenteExeception("Parâmetro '" + funcao.parametros[i].identificador + "' deve ser do tipo " + funcao.parametros[i].tipo + ", mas foi passado um " + variavel.to_string_tipo())
+
+def checar_tipo_constante_booleano(simbolo):
+    if Variavel.BOLEANO != Variavel.get_tipo(simbolo.tipo):
+        raise TipoAtribuicaoConstanteException("Constante '"+ simbolo.identificador +"' na linha " + str(simbolo.linha) + " é declarada como " + simbolo.tipo + ", mas atribuindo um valor booleano.")
+
+def checar_tipo_constante_inteiro(simbolo):
+    if Variavel.INTEGER != Variavel.get_tipo(simbolo.tipo):
+        raise TipoAtribuicaoConstanteException("Constante '"+ simbolo.identificador +"' na linha " + str(simbolo.linha) + " é declarada como " + simbolo.tipo + ", mas atribuindo um valor inteiro.")
+
+def checar_variavel_esta_declarada_com_mesmo_escopo(variaveis, escopo, token):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+
+    if variavel == None:
+        raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' não declarada na linha " + token[1])
+
+def checar_tipo_constante_variavel(simbolo, variaveis, escopo, token_variavel):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token_variavel[0])
+
+    if variavel.tipo != Variavel.get_tipo(simbolo.tipo):
+        raise TipoAtribuicaoConstanteException("Constante '"+ simbolo.identificador +"' na linha " + str(simbolo.linha) + " é declarada como " + simbolo.tipo + ", mas atribuindo um valor "+ variavel.to_string_tipo() +".")

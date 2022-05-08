@@ -101,8 +101,8 @@ def adicionar_paramentro(id_func, parametro):
         if (simbolo.identificador == id_func[0]):
             simbolo.parametros.append(parametro.tipo + ':' + parametro.identificador)
 
-def criar_simbolo(token, tipo=None, id_func=None, escopo=None):
-    simbolo = Simbolo(token[0], escopo=escopo, linha=token[1])
+def criar_simbolo(token, tipo=None, id_func=None, escopo=None, mutavel=True):
+    simbolo = Simbolo(token[0], escopo=escopo, linha=token[1], mutavel=mutavel)
 
     if (simbolo.identificador != "#"):
         if (tipo_valido(lista[i_token - 1])):
@@ -131,7 +131,7 @@ def programa():
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
 
-def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False, checa_funcao_declarada=False, checar_declaracao_funcao=False, bloco_interno_funcao_retorno=False):
+def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False, checa_funcao_declarada=False, checar_declaracao_funcao=False, bloco_interno_funcao_retorno=False, mutavel=True):
     global variaveis_semanticas, funcoes_semanticas
     
     if (token == None):
@@ -152,7 +152,7 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
             else: 
                 raise IdentificadorInvalidoExeception("Identificador '" + token[0] + "' inválido na linha " + token[1])
 
-    criar_simbolo(token, tipo=tipo, id_func=id_func, escopo=escopo)
+    criar_simbolo(token, tipo=tipo, id_func=id_func, escopo=escopo, mutavel=mutavel)
 
     """ Checagens semanticas """
     if checar_termo:
@@ -243,7 +243,7 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
     return bloco(escopo=escopo) 
 
 
-def declaracao_de_constante(escopo=None):
+def declaracao_de_constante(escopo=None, bloco_interno_funcao_retorno=None):
     global token 
     token_local = token
     if (tipo() and definicao_constante(escopo=escopo) and ponto_virgula()):
@@ -261,7 +261,8 @@ def tipo():
         raise TipoConstanteInvalidoException("Tipo de dado '" + token[0] + "' inválido na linha " + token[1])
 
 def definicao_constante(escopo=None):
-    if (identificador(escopo=escopo) and atribuicao() and constante()):
+    
+    if (identificador(escopo=escopo, mutavel=False) and atribuicao() and constante(escopo=escopo)):
         return True
     else:
         return False
@@ -274,11 +275,19 @@ def atribuicao():
     else:
         raise EsperadoAtribuicaoException("Esperado '=' ao invés de '" + token[0] + "' na linha " + token[1])
 
-def constante():
-    global token
+def constante(escopo=None):
+    global token, simbolos, variaveis_semanticas, lista, i_token
     token_local = token
 
-    if (booleano(opcional=True) or numero_inteiro(opcional=True) or identificador(opcional=True)):
+    if (booleano(opcional=True)):
+        checar_tipo_constante_booleano(simbolos[len(simbolos) - 1])
+        return True
+    elif (numero_inteiro(opcional=True)):
+        checar_tipo_constante_inteiro(simbolos[len(simbolos) - 1])
+        return True
+    elif identificador(opcional=True):
+        checar_variavel_esta_declarada_com_mesmo_escopo(variaveis_semanticas, escopo, lista[i_token])
+        checar_tipo_constante_variavel(simbolos[len(simbolos) - 1], variaveis_semanticas, escopo, lista[i_token])
         return True
     else:
         raise ConstanteInvalidaException("Constante '" + token_local[0] + "' inválida na linha " + token_local[1])
@@ -593,7 +602,7 @@ def comando_de_retorno_de_valor():
         if(ponto_virgula()):
             return True
     elif (identificador(opcional=True, checar_declaracao_funcao=True)):
-        print('passou como identifcador')
+        """ print('passou como identifcador') """
         token = ler_token_atual()
         varificar_tipo_retorno_funcao(variaveis_semanticas, token, funcoes_semanticas)
         
@@ -677,7 +686,7 @@ def expressao_numerica():
     if(eh_booleano()):
         return False
     elif (identificador(opcional=True, checar_atribuicao=True) or numero_inteiro(opcional=True)):
-        print("aaaa")
+        """ print("aaaa") """
         return True
     else:
         if(relacao(token=token) or eh_operador()):

@@ -4,14 +4,14 @@ from asyncio.windows_events import NULL
 
 class Simbolo:
 
-    def __init__(self, identificador, valor=None, escopo=None, tipo=None, linha=None):
+    def __init__(self, identificador, valor=None, escopo=None, tipo=None, linha=None, mutavel=True):
         if (self.validar_identificador(identificador)):
             self.identificador = identificador
             self.valor = valor
             self.escopo = escopo
             self.tipo = tipo
             self.linha = linha
-            self.mutavel = True
+            self.mutavel = mutavel
             self.parametros = []
         else:
             self.identificador = "#"
@@ -19,7 +19,7 @@ class Simbolo:
             self.escopo = escopo
             self.tipo = tipo
             self.linha = linha
-            self.mutavel = True
+            self.mutavel = mutavel
             self.parametros = []
             
 
@@ -37,4 +37,4 @@ class Simbolo:
         return True
 
     def print(self):
-        print("Identificador: " + str(self.identificador) + ", Valor: " + str(self.valor) + ", Escopo: " + str(self.escopo) + ", Tipo: " + str(self.tipo) + ", Linha: " + str(self.linha) + ", Parametros: " + str(self.parametros))
+        print("Identificador: " + str(self.identificador) + ", Valor: " + str(self.valor) + ", Escopo: " + str(self.escopo) + ", Tipo: " + str(self.tipo) + ", Linha: " + str(self.linha) + ", Mutavel: " + str(self.mutavel) + ", Parametros: " + str(self.parametros))
