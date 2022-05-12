@@ -9,12 +9,12 @@ prog ads2a;
         inteiro ret;
         inteiro x;
         se(a > b e b > 10){
-            a = b * 10 + a / 2;
+            a = nao a > b e b >= 10;
         }senao{ 
             retorno b; 
         }
         
-        ret = a + b;
+        ret = a + b * 10 + 2 / 2;
         retorno ret; 
     }
 

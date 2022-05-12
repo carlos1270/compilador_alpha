@@ -53,25 +53,59 @@ def gerar_cte_expressao_atribuicao(lista, i_token):
         i -= 1
     
     expressao = list(reversed(expressao))
-
+    print("Gerador CTE: " + str(expressao))
     if len(expressao) == 1:
         file.write(str(lista[i-1][0]) + " := " + str(expressao[0] + "\n"))
     elif len(expressao) > 1:
         while(len(expressao) > 1):
-            var = gerar_var_temp()
-            mult_div = tem_mult_ou_div(expressao)
-            if mult_div: 
-                for s in range(len(expressao)):
-                    if ((expressao[s] == '*') or expressao[s] == '/'):
-                        file.write(str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +"\n")
-                        expressao = gerar_novas_expressoes(expressao, s-1, var)
-                        break
+            bol_exp = eh_expressao_booleana(expressao)
+            if bol_exp:
+                var = gerar_var_temp()
+                comparacao = tem_comparacao(expressao)
+                if comparacao: 
+                    for s in range(len(expressao)):
+                        if (((expressao[s] == '<') or (expressao[s] == '>') or (expressao[s] == '>=') or (expressao[s] == '<=') or (expressao[s] == '==') or (expressao[s] == '!=')) and (expressao[s+1] != 'nao')):
+                            file.write(str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +"\n")
+                            expressao = gerar_novas_expressoes(expressao, s-1, var)
+                            break
+                else:
+                    tem_and = tem_e(expressao)
+                    if tem_and:
+                        for s in range(len(expressao)):
+                            if ((expressao[s] == 'e') and (expressao[s+1] != 'nao')):
+                                file.write(str(var) + " := " + str(expressao[s-1]) + " AND " + str(expressao[s+1]) +"\n")
+                                expressao = gerar_novas_expressoes(expressao, s-1, var)
+                                break
+                    else:
+                        tem_or = tem_ou(expressao)
+                        if tem_or:
+                            for s in range(len(expressao)):
+                                if ((expressao[s] == 'ou') and (expressao[s+1] != 'nao')):
+                                    file.write(str(var) + " := " + str(expressao[s-1]) + " OR " + str(expressao[s+1]) +"\n")
+                                    expressao = gerar_novas_expressoes(expressao, s-1, var)
+                                    break
+                        else:
+                            for s in range(len(expressao)):
+                                if ((expressao[s-1] == 'nao')):
+                                    file.write(str(var) + " := NOT " + str(expressao[s]) + "\n")
+                                    expressao = gerar_novas_expressoes(expressao, s-1, var, nao=True)
+                                    break
+
             else:
-                for s in range(len(expressao)):
-                    if ((expressao[s] == '+') or expressao[s] == '-'):
-                        file.write(str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +"\n")
-                        expressao = gerar_novas_expressoes(expressao, s-1, var)
-                        break
+                var = gerar_var_temp()
+                mult_div = tem_mult_ou_div(expressao)
+                if mult_div: 
+                    for s in range(len(expressao)):
+                        if ((expressao[s] == '*') or (expressao[s] == '/')):
+                            file.write(str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +"\n")
+                            expressao = gerar_novas_expressoes(expressao, s-1, var)
+                            break
+                else:
+                    for s in range(len(expressao)):
+                        if ((expressao[s] == '+') or (expressao[s] == '-')):
+                            file.write(str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +"\n")
+                            expressao = gerar_novas_expressoes(expressao, s-1, var)
+                            break
 
         file.write(str(lista[i-1][0]) + " := " + str(expressao[0]) + "\n")
 
@@ -81,12 +115,44 @@ def tem_mult_ou_div(expressoes):
             return True
     return False
 
-def gerar_novas_expressoes(expressao, i, var):
+def gerar_novas_expressoes(expressao, i, var, nao=False):
     exp = []
-    for s in range(len(expressao)):
-        if (i == s):
-            exp.append(var)
+    if nao:
+        for s in range(len(expressao)):
+            if (i == s):
+                exp.append(var)
 
-        elif ((i+1 != s) and (i+2 != s)):
-            exp.append(expressao[s])
+            elif ((i+1 != s)):
+                exp.append(expressao[s])
+    else:
+        for s in range(len(expressao)):
+            if (i == s):
+                exp.append(var)
+
+            elif ((i+1 != s) and (i+2 != s)):
+                exp.append(expressao[s])
     return exp
+
+def eh_expressao_booleana(expressoes):
+    for i in expressoes:
+        if i in ['<', '>', '<=', '>=', '==', '!=', 'nao', 'e', 'ou']:
+            return True
+    return False
+
+def tem_comparacao(expressoes):
+    for i in range(len(expressoes)):
+        if (expressoes[i] in ['<', '>', '<=', '>=', '==', '!=']) and (expressoes[i+1] != "nao"):
+            return True
+    return False
+
+def tem_e(expressoes):
+    for i in range(len(expressoes)):
+        if (expressoes[i] in ['e']) and (expressoes[i+1] != "nao"):
+            return True
+    return False
+
+def tem_ou(expressoes):
+    for i in range(len(expressoes)):
+        if (expressoes[i] in ['ou']) and (expressoes[i+1] != "nao"):
+            return True
+    return False
