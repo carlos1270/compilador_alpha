@@ -90,11 +90,16 @@ class Funcao:
     BOLEANO = 2
     VAZIO = 3
 
-    def __init__(self, nome, tipo, parametros, lexval):
+    NAO_ESCRITA = 1
+    AGUARDANDO_FIM = 2
+    ESCRITA = 3
+
+    def __init__(self, nome, tipo, parametros, lexval, escrita=NAO_ESCRITA):
         self.nome = nome
         self.tipo = tipo
         self.parametros = parametros
         self.lexval = lexval
+        self.escrita = escrita
 
     def print(self):
         print("Variavel: " + str(self.nome) + ", Tipo: " + str(self.tipo) + ", Parametros: " + str(self.parametros) + ", Lexval: " + str(self.lexval))

@@ -1,3 +1,5 @@
+from src.analise_semantica_classes import *
+
 def abrir_arquivo_cte_temp():
     global file
     init()
@@ -19,11 +21,15 @@ def gerar_var_temp():
     var_i += 1
     return var
 
-def gerar_cte_chamada_atribuicao(lista, i_token):
+def gerar_cte_chamada_atribuicao(lista, i_token, identacao=False):
     global file
     i = i_token
     funcao = ''
     parametros = []
+    ident = ''
+    if identacao:
+        ident = "    "
+
     while(lista[i][0] != '='):
         if (lista[i-1][0] == '='):
             funcao = lista[i][0]
@@ -32,19 +38,16 @@ def gerar_cte_chamada_atribuicao(lista, i_token):
             parametros.append(lista[i][0])
     
         i -= 1
-   
-    parametros = list(reversed(parametros))
 
     for param in parametros:
-        file.write("param " + str(param) + "\n")
+        file.write(ident + "param " + str(param) + ";\n")
     var = gerar_var_temp()
-    file.write(str(var) + " := call " + str(funcao) + ", " + str(len(parametros)) + "\n")
-    file.write(str(lista[i-1][0]) + " := " + str(var) + "\n")
+    file.write(ident + str(var) + " := call " + str(funcao) + ", " + str(len(parametros)) + ";\n")
+    file.write(ident + str(lista[i-1][0]) + " := " + str(var) + ";\n")
 
 
 
-def gerar_cte_expressao_atribuicao(lista, i_token):
-    print("Gerador CTE: " + str(lista[i_token]))
+def gerar_cte_expressao_atribuicao(lista, i_token, identacao=False):
     i = i_token
     expressao = []
     while(lista[i][0] != '='):
@@ -53,9 +56,12 @@ def gerar_cte_expressao_atribuicao(lista, i_token):
         i -= 1
     
     expressao = list(reversed(expressao))
-    print("Gerador CTE: " + str(expressao))
+    ident = ''
+    if identacao:
+        ident = "    "
+
     if len(expressao) == 1:
-        file.write(str(lista[i-1][0]) + " := " + str(expressao[0] + "\n"))
+        file.write(ident + str(lista[i-1][0]) + " := " + str(expressao[0] + ";\n"))
     elif len(expressao) > 1:
         while(len(expressao) > 1):
             bol_exp = eh_expressao_booleana(expressao)
@@ -65,7 +71,7 @@ def gerar_cte_expressao_atribuicao(lista, i_token):
                 if comparacao: 
                     for s in range(len(expressao)):
                         if (((expressao[s] == '<') or (expressao[s] == '>') or (expressao[s] == '>=') or (expressao[s] == '<=') or (expressao[s] == '==') or (expressao[s] == '!=')) and (expressao[s+1] != 'nao')):
-                            file.write(str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +"\n")
+                            file.write(ident + str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +";\n")
                             expressao = gerar_novas_expressoes(expressao, s-1, var)
                             break
                 else:
@@ -73,7 +79,7 @@ def gerar_cte_expressao_atribuicao(lista, i_token):
                     if tem_and:
                         for s in range(len(expressao)):
                             if ((expressao[s] == 'e') and (expressao[s+1] != 'nao')):
-                                file.write(str(var) + " := " + str(expressao[s-1]) + " AND " + str(expressao[s+1]) +"\n")
+                                file.write(ident + str(var) + " := " + str(expressao[s-1]) + " AND " + str(expressao[s+1]) +";\n")
                                 expressao = gerar_novas_expressoes(expressao, s-1, var)
                                 break
                     else:
@@ -81,13 +87,13 @@ def gerar_cte_expressao_atribuicao(lista, i_token):
                         if tem_or:
                             for s in range(len(expressao)):
                                 if ((expressao[s] == 'ou') and (expressao[s+1] != 'nao')):
-                                    file.write(str(var) + " := " + str(expressao[s-1]) + " OR " + str(expressao[s+1]) +"\n")
+                                    file.write(ident + str(var) + " := " + str(expressao[s-1]) + " OR " + str(expressao[s+1]) +";\n")
                                     expressao = gerar_novas_expressoes(expressao, s-1, var)
                                     break
                         else:
                             for s in range(len(expressao)):
                                 if ((expressao[s-1] == 'nao')):
-                                    file.write(str(var) + " := NOT " + str(expressao[s]) + "\n")
+                                    file.write(ident + str(var) + " := NOT " + str(expressao[s]) + ";\n")
                                     expressao = gerar_novas_expressoes(expressao, s-1, var, nao=True)
                                     break
 
@@ -97,17 +103,17 @@ def gerar_cte_expressao_atribuicao(lista, i_token):
                 if mult_div: 
                     for s in range(len(expressao)):
                         if ((expressao[s] == '*') or (expressao[s] == '/')):
-                            file.write(str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +"\n")
+                            file.write(ident + str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +";\n")
                             expressao = gerar_novas_expressoes(expressao, s-1, var)
                             break
                 else:
                     for s in range(len(expressao)):
                         if ((expressao[s] == '+') or (expressao[s] == '-')):
-                            file.write(str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +"\n")
+                            file.write(ident + (var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +";\n")
                             expressao = gerar_novas_expressoes(expressao, s-1, var)
                             break
 
-        file.write(str(lista[i-1][0]) + " := " + str(expressao[0]) + "\n")
+        file.write(ident + str(lista[i-1][0]) + " := " + str(expressao[0]) + ";\n")
 
 def tem_mult_ou_div(expressoes):
     for i in expressoes:
@@ -156,3 +162,17 @@ def tem_ou(expressoes):
         if (expressoes[i] in ['ou']) and (expressoes[i+1] != "nao"):
             return True
     return False
+
+def gerar_cte_inicio_funcao(funcoes):
+    funcao = funcoes.last()
+    if funcao.escrita == Funcao.NAO_ESCRITA:
+        funcao.escrita = Funcao.AGUARDANDO_FIM
+
+        file.write(str(funcao.nome) + ":" + "\n")
+        file.write("  BeginFunc;\n")
+
+def gerar_cte_fim_funcao(funcoes):
+    funcao = funcoes.last()
+    if funcao.escrita == Funcao.AGUARDANDO_FIM:
+        funcao.escrita = Funcao.ESCRITA
+        file.write("  EndFunc;\n")
