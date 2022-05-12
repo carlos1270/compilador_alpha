@@ -6,6 +6,7 @@ from src.Simbolo import Simbolo
 from src.Exceptions import *
 from src.analise_semantica_classes import *
 from src.analise_semantica import *
+from src.gerador_de_cte import *
 
 def init(lista_tokens, tabela_simbolos):
     global token, i_token, lista, simbolos, variaveis_semanticas, funcoes_semanticas
@@ -15,6 +16,7 @@ def init(lista_tokens, tabela_simbolos):
     token = lista_tokens[i_token]
     variaveis_semanticas = VariavelHash()
     funcoes_semanticas = FuncaoHash()
+    abrir_arquivo_cte_temp()
 
 def checar_comando_atribuicao(token):
     if ((token[0] == 'booleano') or (token[0] == 'inteiro') or (token[0] == 'const')):
@@ -639,9 +641,12 @@ def comando_de_atribuicao():
             checar_declaracao_variavel_escopo(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             checar_tipo_funcao_atribuicao(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             retorno = chamada(token_atual[0]) and ponto_virgula()
+            gerar_cte_chamada_atribuicao(lista, i_token)
             return retorno
         else:
-            return expressao() and ponto_virgula()
+            retorno = expressao() and ponto_virgula()
+            gerar_cte_expressao_atribuicao(lista, i_token)
+            return retorno
     else:
         raise ComandoAtribuicaoException("Atribuição '" + token_atual[0] + "' realizada de forma inválida na linha " + token_atual[1])
 

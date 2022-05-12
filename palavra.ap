@@ -9,8 +9,8 @@ prog ads2a;
         inteiro ret;
         inteiro x;
         se(a > b e b > 10){
-            a = b + a;
-        }senao{
+            a = b * 10 + a / 2;
+        }senao{ 
             retorno b; 
         }
         
@@ -23,7 +23,4 @@ prog ads2a;
         a = c;
     }
 
-    
-    a = test(t);
-
-    ret = 1;
+    x = teste(x, t);
