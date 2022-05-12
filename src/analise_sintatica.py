@@ -414,16 +414,26 @@ def fecha_parenteses():
         raise EsperadoParentesesExeception("Esperado ')' ao invés de '" + token[0] + "' na linha " + token[1])
 
 def declaracao_de_funcao(tipo, escopo=None):
-    global lista, i_token, simbolos
+    global lista, i_token, simbolos, funcoes_semanticas
 
     if (identificador(tipo='func:'+tipo, escopo=escopo, checa_funcao_declarada=True) and abre_parenteses()):
         token = ler_proximo_token()
         adicionar_funcao(funcoes_semanticas, ler_token_anterior(), ler_token_tipo_variavel(), simbolos[len(simbolos) - 1])
         if (token[0] == ')'):
             token = ler_token()
-            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
+            open = abre_chaves()
+            gerar_cte_inicio_funcao(funcoes_semanticas)
+            interno = bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1', identacao=True)
+            close = fecha_chaves()
+            gerar_cte_fim_funcao(funcoes_semanticas)
+            return open and interno and close
         elif(parametros_formais(lista[i_token - 1], escopo=escopo+':1') and fecha_parenteses()):
-            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
+            open = abre_chaves()
+            gerar_cte_inicio_funcao(funcoes_semanticas)
+            interno = bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1', identacao=True)
+            close = fecha_chaves()
+            gerar_cte_fim_funcao(funcoes_semanticas)
+            return open and interno and close
     else:
         return False
 
@@ -439,11 +449,11 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
 
     elif (token[0] == 'se'):
         novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
-        comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo+':1')
+        comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo+':1', identacao=identacao)
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
     elif (token[0] == 'enquanto'):
         novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
-        comando_de_laco_while(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, escopo=escopo+':1')
+        comando_de_laco_while(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, escopo=escopo+':1', identacao=identacao)
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
 
     elif ((token[0] == 'pare') or (token[0] == 'pule')):
@@ -469,16 +479,16 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
 
     return True
 
-def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
+def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
     novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
     local_token = ler_token_atual()
-    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()):
+    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()):
 
         proximo_token = ler_proximo_token()
 
         if(proximo_token[0] == 'senao'):
             proximo_token = ler_token()
-            return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
+            return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
         else:
             return True
     else:
@@ -590,11 +600,11 @@ def operador(token=None, opcional=False):
         else:
             raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
 
-def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
-    return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()
+def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
+    return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()
 
-def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None):
-    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo) and fecha_chaves()
+def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None, identacao=False):
+    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo, identacao=identacao) and fecha_chaves()
 
 def comando_de_retorno_de_valor():
     global variaveis_semanticas, simbolos, funcoes_semanticas
