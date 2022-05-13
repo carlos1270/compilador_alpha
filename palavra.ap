@@ -1,29 +1,9 @@
 prog ads2a;
+    inteiro a;
+    inteiro b;
+    a = 3 ou verdadeiro;
+    b = 1;
 
-    inteiro t;
-    booleano ret;
-    inteiro x;
-    const inteiro a = t;
-
-    func inteiro teste(inteiro a, inteiro b){
-        inteiro ret;
-        inteiro x;
-        se(a > b e b > 10){
-            a = b + a;
-        }senao{
-            retorno b; 
-        }
-        
-        ret = a + b;
-        retorno ret; 
+    se(a > b){
+        exibir(a);
     }
-
-    func vazio procedi(inteiro a) {
-        inteiro c;
-        a = c;
-    }
-
-    
-    a = test(t);
-
-    ret = 1;

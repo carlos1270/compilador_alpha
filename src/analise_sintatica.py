@@ -22,6 +22,9 @@ def checar_comando_atribuicao(token):
     elif (palavras_reservada(token)):
         raise PalavrasReservadasComandoException("Palavras reservadas não permitidas para o comando de atribuição, palavra '" + token[0] + "' na linha " + token[1])
 
+def checar_comando_declaracao(token):
+    if (palavras_reservada(token)):
+        raise PalavrasReservadasComandoException("Palavras reservadas não são permitidas em declaração, palavra '" + token[0] + "' na linha " + token[1])
 
 def palavras_reservada(token):
 
@@ -131,7 +134,7 @@ def programa():
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
 
-def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False, checa_funcao_declarada=False, checar_declaracao_funcao=False, bloco_interno_funcao_retorno=False, mutavel=True):
+def identificador(token=None, opcional=False, tipo=None, comando=False, comando_declaracao=False, tipo_numerico=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False, checa_funcao_declarada=False, checar_declaracao_funcao=False, bloco_interno_funcao_retorno=False, mutavel=True, expressao_aritmetica=False):
     global variaveis_semanticas, funcoes_semanticas
     
     if (token == None):
@@ -139,6 +142,9 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
 
     if (comando):
         checar_comando_atribuicao(token)
+    
+    if (comando_declaracao):
+        checar_comando_declaracao(token)
     
     for i in range(len(token[0])):
         if (i == 0 and letra(token[0][i])):
@@ -168,7 +174,10 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, id_func=
     if bloco_interno_funcao_retorno:
         if(not comando):
             checar_ja_declarada(variaveis_semanticas, token, None, funcoes_semanticas=funcoes_semanticas, funcao=bloco_interno_funcao_retorno)
-        
+    
+    if(tipo_numerico):
+        if(not checar_se_variavel_numerica(variaveis_semanticas, token, escopo=escopo)):
+            raise VariavelNaoNumericaEmExpressaoNumericaException("Variável '" + token[0] + "' não é do tipo inteiro para expressão numérica na linha " + token[1])
 
     return True
 
@@ -322,7 +331,7 @@ def booleano(opcional=False):
 
 def declaracao_de_variavel(escopo=None, bloco_interno_funcao_retorno=False):
     global token, variaveis_semanticas, simbolos
-    if (identificador(escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)):
+    if (identificador(escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_declaracao=True)):
         if (ponto_virgula()):
             if(not bloco_interno_funcao_retorno):
                 checar_ja_declarada(variaveis_semanticas, ler_token_anterior(), simbolos[len(simbolos) - 1])
@@ -450,7 +459,7 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
     elif (identificador(token=token, comando=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)):
         global variaveis_semanticas
         token = ler_token_atual()
-        comando_de_atribuicao()
+        comando_de_atribuicao(escopo=escopo)
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
     else:
         raise ComandoNaoIdentificadoExecption("Comando '" + token[0] + "' não identificado na linha " + token[1])
@@ -495,11 +504,11 @@ def ler_token_atual():
     local_token = lista[i_token]
     return local_token
 
-def expressao_booleana(opcional=False):
+def expressao_booleana(opcional=False, escopo=None):
     global lista, i_token
     local_token = lista[i_token]
 
-    if (expressao_simples(opcional)):
+    if (expressao_simples(opcional, escopo=escopo)):
         token_opcional = ler_proximo_token()
 
         if (token_opcional[0] == "e" or token_opcional[0] == "ou"):
@@ -526,7 +535,7 @@ def negacao():
     else:
         return True
 
-def expressao_simples(opcional=False):
+def expressao_simples(opcional=False, escopo=None):
     if (negacao()):
         return termo(opcional)
     return termo(opcional)
@@ -563,8 +572,47 @@ def relacao_opcional(token=None):
         return True
 
 def relacao(token):
-    return (token[0] == "==") or (token[0] == "!=") or (token[0] == "<=") or (token[0] == ">=") or (token[0] == ">") or (token[0] == "<")
+    resultado = (token[0] == "==") or (token[0] == "!=") or (token[0] == "<=") or (token[0] == ">=") or (token[0] == ">") or (token[0] == "<")
+    
+    if(resultado):
+        proximo_token = ler_proximo_token()
+        token_anterior = ler_token_anterior()
+        if(eh_termo(token=proximo_token) and eh_termo(token=token_anterior)):
+            print('ACHOU RELACAO')
+            print(proximo_token)
+            print(token_anterior)
 
+            if(eh_relacao_numerica(token=token)):
+                if(eh_inteiro(token=proximo_token) and eh_inteiro(token=token_anterior)):
+                    print('relacao entre inteiros')
+                else:
+                    print('relacao númerica entre dois termos não inteiros') #printar erro
+            else:
+                if(eh_inteiro(token=proximo_token) and eh_inteiro(token=token_anterior)):
+                    print('relacao entre inteiros')
+                elif(eh_booleano(token=proximo_token) and eh_booleano(token=token_anterior)):
+                    print('relacao entre dois booleanos')
+                else:
+                    print('relacao entre termos de diferentes tipos') #erro
+            print('ACBOU RELACAO')
+            
+    
+    return  resultado
+
+def eh_termo(token):
+    if(eh_booleano(token=token) or eh_inteiro(token=token)):
+        return True
+    return False
+
+def eh_inteiro(token):
+    for i in range(len(token[0])):
+        if (not digito(token[0][i])):
+            return False
+    return True
+
+def eh_relacao_numerica(token):
+    return (token[0] == "<=") or (token[0] == ">=") or (token[0] == ">") or (token[0] == "<")
+    
 def operador(token=None, opcional=False):
     if (token == None):
         token = ler_token()
@@ -629,7 +677,7 @@ def comando_impressao_tela():
     
     return False
 
-def comando_de_atribuicao():
+def comando_de_atribuicao(escopo=None):
     global variaveis_semanticas, funcoes_semanticas, lista, i_token, token_atribuicao
     token_atual = ler_token_atual()
     if (atribuicao()):
@@ -641,21 +689,22 @@ def comando_de_atribuicao():
             retorno = chamada(token_atual[0]) and ponto_virgula()
             return retorno
         else:
-            return expressao() and ponto_virgula()
+            return expressao(escopo=escopo) and ponto_virgula()
     else:
         raise ComandoAtribuicaoException("Atribuição '" + token_atual[0] + "' realizada de forma inválida na linha " + token_atual[1])
 
-def expressao():
-    if(expressao_booleana(opcional=True)):
+def expressao(escopo=None):
+    if(expressao_booleana(opcional=True, escopo=escopo)):
         return True
-    elif(expressao_aritmetica()):
+    elif(expressao_aritmetica(escopo=escopo)):
         return True
     else:
         token_atual = ler_token_atual()
         raise ExpressaoInvalidaException("Expressão '" + token_atual[0] + "' inválida na linha " + token_atual[1])
 
-def eh_booleano():
-    token = ler_token_atual()
+def eh_booleano(token=None):
+    if (token == None):
+        token = ler_token_atual()
     if(token[0] == "verdadeiro" or token[0] == "falso"):
         return True
     return False
@@ -666,18 +715,18 @@ def eh_operador():
         return True
     return False
 
-def expressao_aritmetica(opcional=False):
+def expressao_aritmetica(opcional=False, escopo=None):
     token_atual = ler_token_atual()
-    if(expressao_numerica()):
+    if(expressao_numerica(escopo=escopo)):
         token_opcional = ler_proximo_token()
         if (sinal(token_opcional)):
             ler_token()
-            return expressao_aritmetica()
+            return expressao_aritmetica(opcional=opcional, escopo=escopo)
         elif(token_opcional[0] == ";"  or token_opcional[0] == ")"):
             return True
         elif(relacao(token_opcional[0])):
             ler_token()
-            return expressao_aritmetica()
+            return expressao_aritmetica(opcional=opcional, escopo=escopo)
         elif(operador(token=token_opcional, opcional=True)):
             return True
     else:
@@ -687,11 +736,11 @@ def expressao_aritmetica(opcional=False):
         else:
             raise ExpressaoAritmeticaInvalidaException("Expressão aritmética '" + token_atual[0] + "' feita de forma inválida na linha " + token_atual[1])
 
-def expressao_numerica():
+def expressao_numerica(escopo=None):
     token = ler_token_atual()
     if(eh_booleano()):
         return False
-    elif (identificador(opcional=True, checar_atribuicao=True) or numero_inteiro(opcional=True)):
+    elif (identificador(opcional=True, checar_atribuicao=True, tipo_numerico=True, escopo=escopo) or numero_inteiro(opcional=True)):
         """ print("aaaa") """
         return True
     else:

@@ -27,6 +27,9 @@ class Variavel:
         elif (tipo == 'booleano'):
             return Variavel.BOLEANO
 
+    def set_valor(self, valor):
+        self.valor = valor
+
 class VariavelHash:
     def __init__(self):
         self.variaveis = []
