@@ -1,9 +1,4 @@
 prog ads2a;
     inteiro a;
-    inteiro b;
-    a = 3 ou verdadeiro;
-    b = 1;
-
-    se(a > b){
-        exibir(a);
-    }
+    booleano b;
+    a = verdadeiro ou verdadeiro e b;

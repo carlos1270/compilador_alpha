@@ -167,4 +167,12 @@ class TipoAtribuicaoConstanteException(AnaliseSemanticaException):
 
 class VariavelNaoNumericaEmExpressaoNumericaException(AnaliseSemanticaException):
     def __init__(self, message):
+        super().__init__(message)
+
+class VariavelNumericaEmOperacaoBoolenaException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ValorNumericoEmOperacaoBoolenaException(AnaliseSemanticaException):
+    def __init__(self, message):
         super().__init__(message) 

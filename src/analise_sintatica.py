@@ -134,7 +134,7 @@ def programa():
         raise ProgramaSemIdentificadorExeception("Esperado 'prog' mas encontrado '" + token[0] + "' na linha " + token[1])
 
 
-def identificador(token=None, opcional=False, tipo=None, comando=False, comando_declaracao=False, tipo_numerico=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False, checa_funcao_declarada=False, checar_declaracao_funcao=False, bloco_interno_funcao_retorno=False, mutavel=True, expressao_aritmetica=False):
+def identificador(token=None, opcional=False, tipo=None, comando=False, comando_declaracao=False, tipo_numerico=False, eh_expressao_booleana=False, id_func=None, escopo=None, checar_termo=False, checar_atribuicao=False, checa_funcao_declarada=False, checar_declaracao_funcao=False, bloco_interno_funcao_retorno=False, mutavel=True, expressao_aritmetica=False):
     global variaveis_semanticas, funcoes_semanticas
     
     if (token == None):
@@ -178,6 +178,10 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, comando_
     if(tipo_numerico):
         if(not checar_se_variavel_numerica(variaveis_semanticas, token, escopo=escopo)):
             raise VariavelNaoNumericaEmExpressaoNumericaException("Variável '" + token[0] + "' não é do tipo inteiro para expressão numérica na linha " + token[1])
+        
+    if(eh_expressao_booleana):
+        if(not checar_se_variavel_booleana(variaveis_semanticas, token, escopo=escopo)):
+            raise VariavelNumericaEmOperacaoBoolenaException("Variável '" + token[0] + "' é do tipo inteiro em uma operação booleana na linha " + token[1])
 
     return True
 
@@ -482,15 +486,17 @@ def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=
         raise ComandoCondicionalIfException("Comando condicional '" + local_token[0] + "' inválido na linha " + local_token[1])
         
 
-def operador_opcional(token=None):
+def operador_opcional(token=None, escopo=None, eh_expressao_booleana=False):
+    print('ACHOU UM OPERADOR E AGORA EH EXPRESSAO BOOLENAA')
+    print(eh_expressao_booleana)
     if (token == None):
         token = ler_token()
 
-    if (operador(token) and expressao_simples()):
+    if (operador(token) and expressao_simples(escopo=escopo, eh_expressao_booleana=eh_expressao_booleana)):
         token = ler_proximo_token()
 
         if (token[0] == "e" or token[0] == "ou"):
-            return operador_opcional()
+            return operador_opcional(escopo=escopo, eh_expressao_booleana=eh_expressao_booleana)
         elif (token[0] == ")" or token[0] == ";"):
             return True
         else:
@@ -505,6 +511,7 @@ def ler_token_atual():
     return local_token
 
 def expressao_booleana(opcional=False, escopo=None):
+    print('ENTROU EM EXPRESSAO BOOLEANA')
     global lista, i_token
     local_token = lista[i_token]
 
@@ -512,7 +519,7 @@ def expressao_booleana(opcional=False, escopo=None):
         token_opcional = ler_proximo_token()
 
         if (token_opcional[0] == "e" or token_opcional[0] == "ou"):
-            return operador_opcional()
+            return operador_opcional(escopo=escopo, eh_expressao_booleana=True)
         elif (token_opcional[0] == ')'):
             return True
         elif(sinal(token_opcional)):
@@ -535,26 +542,35 @@ def negacao():
     else:
         return True
 
-def expressao_simples(opcional=False, escopo=None):
+def expressao_simples(opcional=False, escopo=None, eh_expressao_booleana=False):
     if (negacao()):
-        return termo(opcional)
-    return termo(opcional)
+        return termo(opcional, escopo=escopo, eh_expressao_booleana=eh_expressao_booleana)
+    return termo(opcional,  escopo=escopo, eh_expressao_booleana=eh_expressao_booleana)
 
-def termo(opcional=False):
+def termo(opcional=False, escopo=None, eh_expressao_booleana=False):
     global lista, i_token
     local_token = lista[i_token]
 
-    if (booleano(opcional=True) or identificador(opcional=True, checar_termo=True) or numero_inteiro(opcional=True)):
+    if (booleano(opcional=True) or identificador(opcional=True, checar_termo=True, escopo=escopo, eh_expressao_booleana=eh_expressao_booleana)):
         proximo_token = ler_proximo_token()
         
         if (relacao(proximo_token)):
             return relacao_opcional()
         else:
             return True
+    elif(not eh_expressao_booleana):
+        if(numero_inteiro(opcional=True)):
+            proximo_token = ler_proximo_token()
+            if (relacao(proximo_token)):
+                return relacao_opcional()
+            else:
+                return True
     else:
         if(opcional):
             return False
         else:
+            if(eh_expressao_booleana):
+                raise ValorNumericoEmOperacaoBoolenaException("Termo '" + ler_proximo_token()[0] + "' é um númerico em uma operação booleana na linha '" + ler_proximo_token()[1])
             raise TermoInvalidoException("Termo '" + local_token[0] + "' inválido na linha '" + local_token[1])
 
 def relacao_opcional(token=None):

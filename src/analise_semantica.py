@@ -184,32 +184,15 @@ def checar_procedimento_declarado(funcoes, token):
     if not funcoes.exists_procedimento(token[0]):
         raise FuncaoNaoDeclaradaException("Procedimento '" + token[0] + "' não declarado na linha " + token[1])
 
-def atualizar_expressao_aritmetica(expressao_ari, token):
-    print('ATUALIZANDO EXPRESSAO ARITMETICA')
-    print(expressao_ari)
-    print(token)
-
-    if(len(expressao_ari) == 1):
-        expressao_ari.append(token[0])
-    elif(len(expressao_ari) == 2):
-        sinal = expressao_ari[1]
-        if(sinal == '+'):
-            expressao_ari = [int(expressao_ari[0]) + int(token[0])]
-        elif(sinal == '-'):
-            expressao_ari = [int(expressao_ari[0]) - int(token[0])]
-        elif(sinal == '/'):
-            expressao_ari = [int(expressao_ari[0]) // int(token[0])]
-        elif(sinal == '*'):
-            expressao_ari = [int(expressao_ari[0]) * int(token[0])]
-    return expressao_ari
-
-def atribuir_valor_aritmetico_semantico(expressao_ari, variaveis, token, escopo):
-    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
-    variavel.set_valor(int(expressao_ari[0]))
-
 def checar_se_variavel_numerica(variaveis, token, escopo):
     variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
     if variavel.tipo == Variavel.INTEGER:
+        return True
+    return False
+
+def checar_se_variavel_booleana(variaveis, token, escopo):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+    if variavel.tipo == Variavel.BOLEANO:
         return True
     return False
     
