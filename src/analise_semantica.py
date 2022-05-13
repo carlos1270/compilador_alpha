@@ -186,13 +186,16 @@ def checar_procedimento_declarado(funcoes, token):
 
 def checar_se_variavel_numerica(variaveis, token, escopo):
     variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
-    if variavel.tipo == Variavel.INTEGER:
-        return True
+    if(variavel != None):
+        if variavel.tipo == Variavel.INTEGER:
+            return True
+
     return False
 
 def checar_se_variavel_booleana(variaveis, token, escopo):
     variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
-    if variavel.tipo == Variavel.BOLEANO:
-        return True
+    if(variavel != None):
+        if variavel.tipo == Variavel.BOLEANO:
+            return True
     return False
     

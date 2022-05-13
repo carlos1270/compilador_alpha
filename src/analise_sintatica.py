@@ -38,6 +38,18 @@ def palavras_reservada(token):
     
     return False
 
+def caracteres_especiais(token):
+
+    caracteres_especiais = [
+        '(', ')', ';', '='
+    ]
+
+    for palavra in caracteres_especiais:
+        if (palavra == token[0]):
+            return True
+    
+    return False
+
 def ler_token():
     global i_token, lista
     if (i_token < len(lista) - 1):
@@ -473,7 +485,7 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
 def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
     novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
     local_token = ler_token_atual()
-    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()):
+    if (abre_parenteses() and expressao_booleana(escopo=escopo) and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()):
 
         proximo_token = ler_proximo_token()
 
@@ -487,8 +499,6 @@ def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=
         
 
 def operador_opcional(token=None, escopo=None, eh_expressao_booleana=False):
-    print('ACHOU UM OPERADOR E AGORA EH EXPRESSAO BOOLENAA')
-    print(eh_expressao_booleana)
     if (token == None):
         token = ler_token()
 
@@ -511,7 +521,6 @@ def ler_token_atual():
     return local_token
 
 def expressao_booleana(opcional=False, escopo=None):
-    print('ENTROU EM EXPRESSAO BOOLEANA')
     global lista, i_token
     local_token = lista[i_token]
 
@@ -555,76 +564,84 @@ def termo(opcional=False, escopo=None, eh_expressao_booleana=False):
         proximo_token = ler_proximo_token()
         
         if (relacao(proximo_token)):
-            return relacao_opcional()
+            return relacao_opcional(escopo=escopo)
         else:
             return True
     elif(not eh_expressao_booleana):
         if(numero_inteiro(opcional=True)):
             proximo_token = ler_proximo_token()
             if (relacao(proximo_token)):
-                return relacao_opcional()
+                return relacao_opcional(escopo=escopo)
             else:
                 return True
+        else:
+            if(opcional):
+                return False
+            else:
+                raise TermoInvalidoException("Termo '" + local_token[0] + "' inválido na linha '" + local_token[1])
     else:
         if(opcional):
             return False
         else:
             if(eh_expressao_booleana):
-                raise ValorNumericoEmOperacaoBoolenaException("Termo '" + ler_proximo_token()[0] + "' é um númerico em uma operação booleana na linha '" + ler_proximo_token()[1])
+                if(numero_inteiro(opcional=True)):
+                    proximo_token = ler_proximo_token()
+                    if (relacao(proximo_token)):
+                        return relacao_opcional(escopo=escopo)
+                    else:
+                        raise ValorNumericoEmOperacaoBoolenaException("Termo '" + ler_token_atual()[0] + "' é um númerico em uma operação booleana na linha '" + ler_token_atual()[1])
             raise TermoInvalidoException("Termo '" + local_token[0] + "' inválido na linha '" + local_token[1])
 
-def relacao_opcional(token=None):
+def relacao_opcional(token=None, escopo=None):
     if (token == None):
         token = ler_token()
 
-    if (relacao(token) and termo()):
+    if (relacao(token) and checa_semantica_relacao(escopo=escopo) and termo(escopo=escopo)):
         proximo_token = ler_proximo_token()
         
         if (relacao(proximo_token)):
-            return relacao_opcional()
+            return relacao_opcional(escopo=escopo)
         else:
             return True
     else:
         return True
 
+def checa_semantica_relacao(escopo=None):
+    proximo_token = ler_proximo_token()
+    token_anterior = ler_token_anterior()
+    if(eh_termo(token=proximo_token, escopo=escopo) and eh_termo(token=token_anterior, escopo=escopo)):
+
+        if(eh_relacao_numerica(token=ler_token_atual())):
+            if(not(eh_inteiro(token=proximo_token, escopo=escopo) and eh_inteiro(token=token_anterior, escopo=escopo))):
+                raise RelacaoNumericaEntreTermosNaoInteirosException("Relação numérica entre '" + token_anterior[0] + "' e '"+ proximo_token[0] + "' inválida na linha " + proximo_token[1] + ". Todos devem ser numéricos.")
+        else:
+            if(not(eh_booleano(token=proximo_token, escopo=escopo) and eh_booleano(token=token_anterior, escopo=escopo))):
+                if(not(eh_inteiro(token=proximo_token, escopo=escopo) and eh_inteiro(token=token_anterior, escopo=escopo))):
+                    raise RelacaoEntreTermosDeTiposDiferentesException("Relação entre termos '" + token_anterior[0] + "' e '"+ proximo_token[0] + "' inválida na linha " + proximo_token[1] + ". Ambos precisam ser do mesmo tipo.")
+    return True
+
 def relacao(token):
-    resultado = (token[0] == "==") or (token[0] == "!=") or (token[0] == "<=") or (token[0] == ">=") or (token[0] == ">") or (token[0] == "<")
+    return (token[0] == "==") or (token[0] == "!=") or (token[0] == "<=") or (token[0] == ">=") or (token[0] == ">") or (token[0] == "<")
     
-    if(resultado):
-        proximo_token = ler_proximo_token()
-        token_anterior = ler_token_anterior()
-        if(eh_termo(token=proximo_token) and eh_termo(token=token_anterior)):
-            print('ACHOU RELACAO')
-            print(proximo_token)
-            print(token_anterior)
-
-            if(eh_relacao_numerica(token=token)):
-                if(eh_inteiro(token=proximo_token) and eh_inteiro(token=token_anterior)):
-                    print('relacao entre inteiros')
-                else:
-                    print('relacao númerica entre dois termos não inteiros') #printar erro
-            else:
-                if(eh_inteiro(token=proximo_token) and eh_inteiro(token=token_anterior)):
-                    print('relacao entre inteiros')
-                elif(eh_booleano(token=proximo_token) and eh_booleano(token=token_anterior)):
-                    print('relacao entre dois booleanos')
-                else:
-                    print('relacao entre termos de diferentes tipos') #erro
-            print('ACBOU RELACAO')
-            
-    
-    return  resultado
-
-def eh_termo(token):
-    if(eh_booleano(token=token) or eh_inteiro(token=token)):
+def eh_termo(token, escopo=None):
+    if(eh_booleano(token=token, escopo=escopo) or eh_inteiro(token=token, escopo=escopo) or not palavras_reservada(token=token) or not caracteres_especiais(token=token)):
         return True
     return False
 
-def eh_inteiro(token):
+def eh_inteiro(token, escopo=None):
+    eh_numerico = True
     for i in range(len(token[0])):
         if (not digito(token[0][i])):
-            return False
-    return True
+            eh_numerico = False
+            break
+    if(eh_numerico):
+        return True
+
+    global variaveis_semanticas
+    if(checar_se_variavel_numerica(variaveis_semanticas, token=token, escopo=escopo)):
+        return True
+    else:
+        return False
 
 def eh_relacao_numerica(token):
     return (token[0] == "<=") or (token[0] == ">=") or (token[0] == ">") or (token[0] == "<")
@@ -646,7 +663,7 @@ def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquant
     return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()
 
 def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None):
-    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo) and fecha_chaves()
+    return abre_parenteses() and expressao_booleana(escopo=escopo) and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo) and fecha_chaves()
 
 def comando_de_retorno_de_valor():
     global variaveis_semanticas, simbolos, funcoes_semanticas
@@ -718,12 +735,17 @@ def expressao(escopo=None):
         token_atual = ler_token_atual()
         raise ExpressaoInvalidaException("Expressão '" + token_atual[0] + "' inválida na linha " + token_atual[1])
 
-def eh_booleano(token=None):
+def eh_booleano(token=None, escopo=None):
     if (token == None):
         token = ler_token_atual()
     if(token[0] == "verdadeiro" or token[0] == "falso"):
         return True
-    return False
+
+    global variaveis_semanticas
+    if(checar_se_variavel_booleana(variaveis_semanticas, token=token, escopo=escopo)):
+        return True
+    else:
+        return False
 
 def eh_operador():
     token = ler_token_atual()

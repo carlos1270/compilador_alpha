@@ -175,4 +175,12 @@ class VariavelNumericaEmOperacaoBoolenaException(AnaliseSemanticaException):
 
 class ValorNumericoEmOperacaoBoolenaException(AnaliseSemanticaException):
     def __init__(self, message):
+        super().__init__(message)
+
+class RelacaoNumericaEntreTermosNaoInteirosException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class RelacaoEntreTermosDeTiposDiferentesException(AnaliseSemanticaException):
+    def __init__(self, message):
         super().__init__(message) 
