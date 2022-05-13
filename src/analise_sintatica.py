@@ -1,4 +1,5 @@
 from asyncio.windows_events import NULL
+from glob import glob
 from pickletools import read_uint1
 from threading import local
 from tkinter.tix import Tree
@@ -480,10 +481,15 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
     return True
 
 def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
+    global lista, i_token
     novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
     local_token = ler_token_atual()
-    if (abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()):
 
+    expressao_bool = abre_parenteses() and expressao_booleana() and fecha_parenteses()
+    gerar_inicio_cte_if(lista, i_token, identacao=identacao)
+    bloco_de_codigo = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()
+    gerar_label_interno_cte_if(identacao=identacao)
+    if (expressao_bool and bloco_de_codigo):
         proximo_token = ler_proximo_token()
 
         if(proximo_token[0] == 'senao'):
@@ -601,7 +607,9 @@ def operador(token=None, opcional=False):
             raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
 
 def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
-    return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()
+    retorno = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()
+    gerar_label_externo_if(identacao=identacao)
+    return retorno
 
 def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None, identacao=False):
     return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo, identacao=identacao) and fecha_chaves()
