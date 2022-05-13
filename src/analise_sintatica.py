@@ -630,7 +630,7 @@ def comando_impressao_tela():
     return False
 
 def comando_de_atribuicao():
-    global variaveis_semanticas, funcoes_semanticas, lista, i_token
+    global variaveis_semanticas, funcoes_semanticas, lista, i_token, token_atribuicao
     token_atual = ler_token_atual()
     if (atribuicao()):
         if (checar_chamada(opcional=True)):
