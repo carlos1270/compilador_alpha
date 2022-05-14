@@ -486,16 +486,19 @@ def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=
     local_token = ler_token_atual()
 
     expressao_bool = abre_parenteses() and expressao_booleana() and fecha_parenteses()
-    gerar_inicio_cte_if(lista, i_token, identacao=identacao)
+    labels = gerar_inicio_cte_if(lista, i_token, identacao=identacao)
     bloco_de_codigo = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()
-    gerar_label_interno_cte_if(identacao=identacao)
+    gerar_label_interno_cte_if(labels, identacao=identacao)
     if (expressao_bool and bloco_de_codigo):
         proximo_token = ler_proximo_token()
 
         if(proximo_token[0] == 'senao'):
             proximo_token = ler_token()
-            return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
+            retorno = comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
+            gerar_label_externo_if(labels, identacao=identacao)
+            return retorno
         else:
+            gerar_label_externo_if(labels, identacao=identacao)
             return True
     else:
         raise ComandoCondicionalIfException("Comando condicional '" + local_token[0] + "' inválido na linha " + local_token[1])
@@ -608,16 +611,15 @@ def operador(token=None, opcional=False):
 
 def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
     retorno = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()
-    gerar_label_externo_if(identacao=identacao)
     return retorno
 
 def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None, identacao=False):
     global lista, i_token
 
     expressao_bool = abre_parenteses() and expressao_booleana() and fecha_parenteses()
-    gerar_cte_expressao_while(lista, i_token, identacao=identacao)
+    labels = gerar_cte_expressao_while(lista, i_token, identacao=identacao)
     bloco_while = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo, identacao=identacao) and fecha_chaves()
-    gerar_cte_fim_while(identacao=identacao)
+    gerar_cte_fim_while(labels, identacao=identacao)
     return expressao_bool and bloco_while
 
 def comando_de_retorno_de_valor():

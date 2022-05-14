@@ -196,10 +196,6 @@ def gerar_label_if():
 
     return labels
 
-def salvar_labels(labels):
-    global l
-    l = labels
-
 def gerar_inicio_cte_if(lista, i_token, identacao=False):
     ident = ''
     if identacao:
@@ -213,7 +209,6 @@ def gerar_inicio_cte_if(lista, i_token, identacao=False):
     expressao = list(reversed(expressao))
 
     labels = gerar_label_if()
-    salvar_labels(labels)
     if (len(expressao) == 1):        
         file.write(ident + "if !" + gerar_boolean(expressao[0]) + " goto " + str(labels[0])+"\n")
     elif (len(expressao) > 1):
@@ -253,24 +248,22 @@ def gerar_inicio_cte_if(lista, i_token, identacao=False):
 
         file.write(ident + "if !" + var_temp + " goto " + str(labels[0])+"\n")
 
-def gerar_label_interno_cte_if(identacao=False):
-    global l
+    return labels
 
+def gerar_label_interno_cte_if(labels, identacao=False):
     ident = ''
     if identacao:
         ident = "    "
     
-    file.write(ident + "goto " +str(l[1])+"\n")
-    file.write(ident + str(l[0])+":\n")
+    file.write(ident + "goto " +str(labels[1])+"\n")
+    file.write(ident + str(labels[0])+":\n")
 
-def gerar_label_externo_if(identacao=False):
-    global l
-
+def gerar_label_externo_if(labels, identacao=False):
     ident = ''
     if identacao:
         ident = "    "
 
-    file.write(ident + str(l[1])+":\n")
+    file.write(ident + str(labels[1])+":\n")
 
 
 def gerar_cte_expressao_while(lista, i_token, identacao=False):
@@ -286,7 +279,6 @@ def gerar_cte_expressao_while(lista, i_token, identacao=False):
     expressao = list(reversed(expressao))
     
     labels = gerar_label_if()
-    salvar_labels(labels)
     if (len(expressao) == 1):        
         file.write(ident + str(labels[0]) + ": if !" + gerar_boolean(expressao[0]) + " goto " + str(labels[1])+"\n")
     elif (len(expressao) > 1):
@@ -326,8 +318,10 @@ def gerar_cte_expressao_while(lista, i_token, identacao=False):
             var_temp = var
 
         file.write(ident + str(labels[0]) + ": if !" + var_temp + " goto " + str(labels[1])+"\n")
+    
+    return labels
 
-def gerar_cte_fim_while(identacao=False):
+def gerar_cte_fim_while(labels, identacao=False):
     global l
 
     ident = ''

@@ -9,7 +9,9 @@ prog ads2a;
         inteiro ret;
         inteiro x;
         se(a > b e b > 10){
-            a = nao a > b e b >= 10;
+            se (b < 2) {
+                a = nao a > b e b >= 10;
+            }
         }senao{ 
             retorno b; 
         }
