@@ -377,3 +377,13 @@ def gerar_cte_impressao_booleano(lista, i_token, identacao=False):
         i -= 1
 
     file.write(ident + "Print " + str(gerar_boolean(booleano)) + ";\n")
+
+def gerar_cte_comando_desvio(comando, labels, identacao=False):
+    ident = ''
+    if identacao:
+        ident = "    "
+
+    if comando[0] == 'pare':
+        file.write(ident + "goto " + labels[1] + "\n")
+    elif comando[0] == 'pule':
+        file.write(ident + "goto " + labels[0] + "\n")

@@ -19,6 +19,7 @@ prog ads2a;
         x = 10;
         enquanto (x > 0) {
             x = x - 1;
+            pare;
         }
         ret = a + b * 10 + 2 / x;
         retorno ret; 

@@ -231,9 +231,9 @@ def ponto_virgula():
     else:
         raise EsperaPontoVirgulaExeception("Esperado ';' no lugar de '" + token[0] + "' na linha " + token[1])
 
-def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
+def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False, labels=None):
     token = ler_token()
-
+   
     if (token[0] == '$'):
         return True
     else:
@@ -261,15 +261,15 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
                 raise ComandoDeRetornoDeValorInvalidoException("Comando de retorno só pode ser chamado em blocos de função com retorno. Erro na linha '"+token[1]+"'")
         elif(token[0] == 'pare' or token[0] == 'pule'):
             if(comando_enquanto):
-                comandos_de_desvio_incondicional()
+                comandos_de_desvio_incondicional(labels=labels, identacao=identacao)
                 return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
             else:
                 raise ComandoIncondicionalInvalidoException("Comandos 'pare' ou 'pule' devem ser utilizados dentro de blocos 'enquanto'. Erro na linha '"+token[1]+"'")
         elif(prox_eh_comando(token=token, escopo=escopo)):
             if(bloco_interno):
-                return comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
+                return comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao, labels=labels)
             else:
-                comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
+                comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao, labels=labels)
         
         elif(token[0] == '}' or token[0] == ')'):
             if(bloco_interno):
@@ -277,7 +277,7 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
             voltar_token()
             return True
     
-    return bloco(escopo=escopo, identacao=identacao) 
+    return bloco(escopo=escopo, identacao=identacao, labels=labels) 
 
 
 def declaracao_de_constante(escopo=None, bloco_interno_funcao_retorno=None):
@@ -479,10 +479,10 @@ def declaracao_de_funcao(tipo, escopo=None):
     else:
         return False
 
-def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
+def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False, labels=None):
     if (token == None):
         token = ler_token() 
-    
+
     if (token[0] == '$'):
         return True
 
@@ -492,30 +492,33 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
     elif (token[0] == 'se'):
         novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
         comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo+':1', identacao=identacao)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao, labels=labels)
     elif (token[0] == 'enquanto'):
         novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
         comando_de_laco_while(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, escopo=escopo+':1', identacao=identacao)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao, labels=labels)
 
     elif ((token[0] == 'pare') or (token[0] == 'pule')):
-        comandos_de_desvio_incondicional()
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
+        if(comando_enquanto):
+            comandos_de_desvio_incondicional(labels=labels, identacao=identacao)
+            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao, labels=labels)
+        else:
+            raise ComandoIncondicionalInvalidoException("Comandos 'pare' ou 'pule' devem ser utilizados dentro de blocos 'enquanto'. Erro na linha '"+token[1]+"'")
     elif (token[0] == 'exibir'):
         comando_impressao_tela(escopo=escopo, identacao=identacao)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao, labels=labels)
     elif(comando_chamada_procedimento(opcional=True, escopo=escopo)):
         token_atual = ler_token_atual()
         if (chamada(token_atual[0], procedimento=True)): 
             ponto_virgula()
 
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao, labels=labels)
     
     elif (identificador(token=token, comando=True, escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)):
         global variaveis_semanticas
         token = ler_token_atual()
         comando_de_atribuicao(identacao=identacao, escopo=escopo)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao, labels=labels)
     else:
         raise ComandoNaoIdentificadoExecption("Comando '" + token[0] + "' não identificado na linha " + token[1])
 
@@ -744,7 +747,7 @@ def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None, ident
         else:
             paranteses = fecha_parenteses()
             labels = gerar_cte_expressao_while(lista, i_token, identacao=identacao)
-            bloco_while = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo, identacao=identacao) and fecha_chaves()
+            bloco_while = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo, identacao=identacao, labels=labels) and fecha_chaves()
             if(paranteses and bloco_while):
                 tipo_retorno_expressao = [None, True]
                 gerar_cte_fim_while(labels, identacao=identacao)
@@ -789,7 +792,10 @@ def comando_de_retorno_de_valor(escopo=None):
             return True
     return False
 
-def comandos_de_desvio_incondicional():
+def comandos_de_desvio_incondicional(labels, identacao=False):
+    token_atual = ler_token_atual()
+    
+    gerar_cte_comando_desvio(token_atual, labels, identacao=identacao)
     return ponto_virgula()
 
 
