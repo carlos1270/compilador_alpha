@@ -1,4 +1,5 @@
 from asyncio.windows_events import NULL
+from glob import glob
 from pickletools import read_uint1
 from threading import local
 from tkinter.tix import Tree
@@ -6,6 +7,7 @@ from src.Simbolo import Simbolo
 from src.Exceptions import *
 from src.analise_semantica_classes import *
 from src.analise_semantica import *
+from src.gerador_de_cte import *
 
 def init(lista_tokens, tabela_simbolos):
     global token, i_token, lista, simbolos, variaveis_semanticas, funcoes_semanticas, tipo_retorno_expressao
@@ -16,6 +18,7 @@ def init(lista_tokens, tabela_simbolos):
     token = lista_tokens[i_token]
     variaveis_semanticas = VariavelHash()
     funcoes_semanticas = FuncaoHash()
+    abrir_arquivo_cte_temp()
 
 def checar_comando_atribuicao(token):
     if ((token[0] == 'booleano') or (token[0] == 'inteiro') or (token[0] == 'const')):
@@ -199,6 +202,7 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, comando_
     
     global tipo_retorno_expressao
     if(tipo_retorno_expressao[1]):
+        print("--------------------------- IDENTIFICADOR ", escopo)
         variavel = variaveis_semanticas.ultima_mesmo_escopo(escopo, token[0])
         if(variavel != None):
             tipo_retorno_expressao[0] = variavel.tipo
@@ -228,7 +232,7 @@ def ponto_virgula():
     else:
         raise EsperaPontoVirgulaExeception("Esperado ';' no lugar de '" + token[0] + "' na linha " + token[1])
 
-def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
+def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
     token = ler_token()
 
     if (token[0] == '$'):
@@ -236,10 +240,10 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
     else:
         if (token[0] == 'const'):
             declaracao_de_constante(escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
-            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
         elif(token[0] == 'inteiro' or token[0] == 'booleano'):
             declaracao_de_variavel(escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)
-            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+            return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
 
         elif(token[0] == 'func'):
             if(bloco_interno_funcao_retorno):
@@ -248,25 +252,25 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
             else:
                 novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
                 declaracao_de_sub_rotina(escopo=escopo)
-                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
+                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
         elif(token[0] == 'retorno'):
             if(bloco_interno_funcao_retorno):
                 identificador(token=token, escopo=escopo)
                 comando_de_retorno_de_valor(escopo=escopo)
-                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
             else:
                 raise ComandoDeRetornoDeValorInvalidoException("Comando de retorno só pode ser chamado em blocos de função com retorno. Erro na linha '"+token[1]+"'")
         elif(token[0] == 'pare' or token[0] == 'pule'):
             if(comando_enquanto):
                 comandos_de_desvio_incondicional()
-                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+                return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
             else:
                 raise ComandoIncondicionalInvalidoException("Comandos 'pare' ou 'pule' devem ser utilizados dentro de blocos 'enquanto'. Erro na linha '"+token[1]+"'")
         elif(prox_eh_comando(token=token, escopo=escopo)):
             if(bloco_interno):
-                return comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+                return comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
             else:
-                comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+                comando(token, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
         
         elif(token[0] == '}' or token[0] == ')'):
             if(bloco_interno):
@@ -274,7 +278,7 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
             voltar_token()
             return True
     
-    return bloco(escopo=escopo) 
+    return bloco(escopo=escopo, identacao=identacao) 
 
 
 def declaracao_de_constante(escopo=None, bloco_interno_funcao_retorno=None):
@@ -386,16 +390,26 @@ def declaracao_de_sub_rotina(escopo=None):
         raise TipoDeSubRotinaInvalidaException("Tipo '" + token[0] + "' de sub-rotina inválida na linha " + token[1])
 
 def declaracao_de_procedimento(escopo=None):
-    global lista, i_token, simbolos
+    global lista, i_token, simbolos, funcoes_semanticas
 
     if (identificador(tipo='proc:vazio', escopo=escopo, checa_funcao_declarada=True) and abre_parenteses()):
         token = ler_proximo_token()
         adicionar_funcao(funcoes_semanticas, ler_token_anterior(), ler_token_tipo_variavel(), simbolos[len(simbolos) - 1])
         if (token[0] == ')'):
             token = ler_token()
-            return abre_chaves() and bloco(bloco_interno=True, escopo=escopo+':1') and fecha_chaves()
+            open = abre_chaves()
+            gerar_cte_inicio_funcao(funcoes_semanticas)
+            interno = bloco(bloco_interno=True, escopo=escopo+':1', identacao=True)
+            close = fecha_chaves()
+            gerar_cte_fim_funcao(funcoes_semanticas)
+            return open and interno and close
         elif(parametros_formais(lista[i_token - 1], escopo=escopo+':1') and fecha_parenteses()):
-            return abre_chaves() and bloco(bloco_interno=True, escopo=escopo+':1') and fecha_chaves()
+            open = abre_chaves()
+            gerar_cte_inicio_funcao(funcoes_semanticas)
+            interno = bloco(bloco_interno=True, escopo=escopo+':1', identacao=True)
+            close = fecha_chaves()
+            gerar_cte_fim_funcao(funcoes_semanticas)
+            return open and interno and close
     else:
         return False
 
@@ -443,20 +457,30 @@ def fecha_parenteses():
         raise EsperadoParentesesExeception("Esperado ')' ao invés de '" + token[0] + "' na linha " + token[1])
 
 def declaracao_de_funcao(tipo, escopo=None):
-    global lista, i_token, simbolos
+    global lista, i_token, simbolos, funcoes_semanticas
 
     if (identificador(tipo='func:'+tipo, escopo=escopo, checa_funcao_declarada=True) and abre_parenteses()):
         token = ler_proximo_token()
         adicionar_funcao(funcoes_semanticas, ler_token_anterior(), ler_token_tipo_variavel(), simbolos[len(simbolos) - 1])
         if (token[0] == ')'):
             token = ler_token()
-            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
+            open = abre_chaves()
+            gerar_cte_inicio_funcao(funcoes_semanticas)
+            interno = bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1', identacao=True)
+            close = fecha_chaves()
+            gerar_cte_fim_funcao(funcoes_semanticas)
+            return open and interno and close
         elif(parametros_formais(lista[i_token - 1], escopo=escopo+':1') and fecha_parenteses()):
-            return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1') and fecha_chaves()
+            open = abre_chaves()
+            gerar_cte_inicio_funcao(funcoes_semanticas)
+            interno = bloco(bloco_interno=True, bloco_interno_funcao_retorno=True, escopo=escopo+':1', identacao=True)
+            close = fecha_chaves()
+            gerar_cte_fim_funcao(funcoes_semanticas)
+            return open and interno and close
     else:
         return False
 
-def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
+def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
     if (token == None):
         token = ler_token() 
     
@@ -468,62 +492,71 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
 
     elif (token[0] == 'se'):
         novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
-        comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo+':1')
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
+        comando_condicional_if(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo+':1', identacao=identacao)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
     elif (token[0] == 'enquanto'):
         novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
-        comando_de_laco_while(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, escopo=escopo+':1')
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
+        comando_de_laco_while(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, escopo=escopo+':1', identacao=identacao)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
 
     elif ((token[0] == 'pare') or (token[0] == 'pule')):
         comandos_de_desvio_incondicional()
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
     elif (token[0] == 'exibir'):
         comando_impressao_tela(escopo=escopo)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
     elif(comando_chamada_procedimento(opcional=True, escopo=escopo)):
         token_atual = ler_token_atual()
         if (chamada(token_atual[0], procedimento=True)): 
             ponto_virgula()
 
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
     
     elif (identificador(token=token, comando=True, escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno)):
         global variaveis_semanticas
         token = ler_token_atual()
-        comando_de_atribuicao(escopo=escopo)
-        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo)
+        comando_de_atribuicao(identacao=identacao, escopo=escopo)
+        return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
     else:
         raise ComandoNaoIdentificadoExecption("Comando '" + token[0] + "' não identificado na linha " + token[1])
 
     return True
 
-def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
+def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
+    global lista, i_token, tipo_retorno_expressao
     novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
     local_token = ler_token_atual()
-    if (abre_parenteses() and expressao_booleana(escopo=escopo)):
-        global tipo_retorno_expressao
+
+    expressao_bool = abre_parenteses() and expressao_booleana(escopo=escopo)
+    if (expressao_bool):
         if(Variavel.BOLEANO != tipo_retorno_expressao[0]):
             tipo_retorno_expressao = [None, True]
             raise ValorDaExpressaoNaoBooleanaException("A expressão para o comando se precisa ser booleana na linha " + local_token[1])
         else:
             tipo_retorno_expressao = [None, True]
-            if(fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()):
+            expressao_bool = expressao_bool and fecha_parenteses() 
+            labels = gerar_inicio_cte_if(lista, i_token, identacao=identacao)
+            bloco_de_codigo = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()
+            gerar_label_interno_cte_if(labels, identacao=identacao)
+            
+            if(bloco_de_codigo):
                 proximo_token = ler_proximo_token()
 
                 if(proximo_token[0] == 'senao'):
                     proximo_token = ler_token()
-                    return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
+                    retorno = comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco, identacao=identacao)
+                    gerar_label_externo_if(labels, identacao=identacao)
+                    return retorno
                 else:
                     tipo_retorno_expressao = [None, True]
+                    gerar_label_externo_if(labels, identacao=identacao)
                     return True
             else:
                 tipo_retorno_expressao = [None, True]
                 raise ComandoCondicionalIfException("Comando condicional '" + local_token[0] + "' inválido na linha " + local_token[1])
     else:
         tipo_retorno_expressao = [None, True]
-        raise ComandoCondicionalIfException("Comando condicional '" + local_token[0] + "' inválido na linha " + local_token[1])
-        
+        raise ComandoCondicionalIfException("Comando condicional '" + local_token[0] + "' inválido na linha " + local_token[1])        
 
 def operador_opcional(token=None, escopo=None, eh_expressao_booleana=False):
     global tipo_retorno_expressao
@@ -696,19 +729,26 @@ def operador(token=None, opcional=False):
         else:
             raise OperadorInvalidoException("Operador '" + token[0] + "' inválido na linha " + token[1])
 
-def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
-    return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()
+def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None, identacao=False):
+    retorno = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao) and fecha_chaves()
+    return retorno
 
-def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None):
+def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None, identacao=False):
+    global lista, i_token, tipo_retorno_expressao
     local_token = ler_token_atual()
-    if(abre_parenteses() and expressao_booleana(escopo=escopo)):
-        global tipo_retorno_expressao
+
+    expressao_bool = abre_parenteses() and expressao_booleana(escopo=escopo)
+    if (expressao_bool):
         if(Variavel.BOLEANO != tipo_retorno_expressao[0]):
             tipo_retorno_expressao = [None, True]
             raise ValorDaExpressaoNaoBooleanaException("A expressão para o comando enquanto precisa ser booleana na linha " + local_token[1])
         else:
-            if(fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo) and fecha_chaves()):
+            paranteses = fecha_parenteses()
+            labels = gerar_cte_expressao_while(lista, i_token, identacao=identacao)
+            bloco_while = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo, identacao=identacao) and fecha_chaves()
+            if(paranteses and bloco_while):
                 tipo_retorno_expressao = [None, True]
+                gerar_cte_fim_while(labels, identacao=identacao)
                 return True
             else:
                 tipo_retorno_expressao = [None, True]
@@ -753,16 +793,21 @@ def comando_de_retorno_de_valor(escopo=None):
 def comandos_de_desvio_incondicional():
     return ponto_virgula()
 
+
 def comando_impressao_tela(escopo=None):
+    global lista, i_token
+
     if (abre_parenteses()):
         if (checar_chamada(opcional=True, escopo=escopo)):
-            return chamada() and fecha_parenteses() and ponto_virgula()
-        elif (identificador(opcional=True, escopo=escopo, checar_termo=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and fecha_parenteses() and ponto_virgula():
+            retorno = chamada(lista[i_token][0], escopo=escopo) and fecha_parenteses() and ponto_virgula()
+
+            return retorno
+        elif  (identificador(opcional=True, escopo=escopo, checar_termo=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and fecha_parenteses() and ponto_virgula():
             return True
     
     return False
 
-def comando_de_atribuicao(escopo=None):
+def comando_de_atribuicao(identacao=False, escopo=None):
     global variaveis_semanticas, funcoes_semanticas, lista, i_token
     token_atual = ler_token_atual()
     if (atribuicao()):
@@ -772,13 +817,16 @@ def comando_de_atribuicao(escopo=None):
             checar_declaracao_variavel_escopo(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             checar_tipo_funcao_atribuicao(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             retorno = chamada(token_atual[0]) and ponto_virgula()
+            gerar_cte_chamada_atribuicao(lista, i_token, identacao=identacao)
             return retorno
         else:
             if(expressao(escopo=escopo)):
                 global tipo_retorno_expressao
                 if(checar_tipo_expressao_atribuicao(variaveis_semanticas, token_atual, escopo=escopo, tipo_expressao=tipo_retorno_expressao)):
                     tipo_retorno_expressao = [None, True]
-                    return ponto_virgula()
+                    retorno = ponto_virgula()
+                    gerar_cte_expressao_atribuicao(lista, i_token, identacao=identacao)
+                    return retorno
                 else:
                     tipo_retorno_expressao = [None, True]
                     raise ValorDaExpressaoDiferenteDoTipoDaAtribuicaoException("Tipo de retorno da expressão diferente do tipo de dado para a atribuição em '" + token_atual[0] + "' na linha " + token_atual[1])
@@ -877,13 +925,13 @@ def prox_eh_comando(token=None, escopo=None):
 
     return (token[0] == 'se') or (token[0] == 'senao') or (token[0] == 'enquanto') or (token[0] == 'retorno') or (token[0] == 'pare') or (token[0] == 'pule') or (token[0] == 'exibir') or (comando_chamada_procedimento(opcional=True, escopo=escopo)) or (identificador(token=token, comando=True, checar_atribuicao=True, escopo=escopo))
 
-def chamada(nome_funcao, procedimento=False):
+def chamada(nome_funcao, procedimento=False, escopo=None):
     global i_token, lista, funcoes_semanticas, variaveis_semanticas
     
     if procedimento:
         checar_procedimento_declarado(funcoes_semanticas, lista[i_token])
 
-    retorno = abre_parenteses() and secao_parametros_passados() and fecha_parenteses()
+    retorno = abre_parenteses() and secao_parametros_passados(escopo=escopo) and fecha_parenteses()
     checar_quantidade_parametros_passados(funcoes_semanticas, nome_funcao, parametros_funcao(nome_funcao, i_token, lista))
     checar_tipos_paramentros_passados(variaveis_semanticas, funcoes_semanticas, nome_funcao, parametros_funcao(nome_funcao, i_token, lista))
     return retorno
@@ -902,7 +950,7 @@ def secao_parametros_passados(escopo=None):
     if (token[0] == ')'):
         return True
 
-    return secao_parametros_passados()
+    return secao_parametros_passados(escopo=escopo)
 
 def checar_chamada(opcional=False, escopo=None):
     if (identificador(opcional=opcional, escopo=escopo)):

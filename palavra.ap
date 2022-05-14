@@ -8,32 +8,27 @@ prog ads2a;
     func inteiro teste(inteiro a, inteiro b){
         inteiro ret;
         inteiro x;
+        booleano q;
         se(a > b e b > 10){
-            a = b + a;
-        }senao{
+            se (b < 2) {
+                q = nao a > b e b >= 10;
+            }
+        }senao{ 
             retorno b; 
         }
-        
-        ret = a + b;
+        x = 10;
+        enquanto (x > 0) {
+            x = x - 1;
+        }
+        ret = a + b * 10 + 2 / x;
         retorno ret; 
     }
 
     func vazio procedi(inteiro a) {
         inteiro c;
+        inteiro d;
+        exibir(teste(c, d););
         a = c;
     }
 
-    
-    se(t > x e verdadeiro){
-        exibir(t);
-    }
-
-    se(verdadeiro){
-        exibir(x);
-    }
-
-    enquanto(3 > 4){
-        exibir(10);
-    }
-
-    ret = 1;
+    x = teste(x, t);
