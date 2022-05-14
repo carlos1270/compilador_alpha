@@ -502,7 +502,7 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
         comandos_de_desvio_incondicional()
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
     elif (token[0] == 'exibir'):
-        comando_impressao_tela(escopo=escopo)
+        comando_impressao_tela(escopo=escopo, identacao=identacao)
         return bloco(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo, identacao=identacao)
     elif(comando_chamada_procedimento(opcional=True, escopo=escopo)):
         token_atual = ler_token_atual()
@@ -793,16 +793,29 @@ def comandos_de_desvio_incondicional():
     return ponto_virgula()
 
 
-def comando_impressao_tela(escopo=None):
+def comando_impressao_tela(escopo=None, identacao=False):
     global lista, i_token
 
     if (abre_parenteses()):
         if (checar_chamada(opcional=True, escopo=escopo)):
+            token_atual = ler_token_atual()
+            checar_funcao(funcoes_semanticas, lista[i_token])
+            checar_declaracao_variavel_escopo(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
+            checar_tipo_funcao_atribuicao(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             retorno = chamada(lista[i_token][0], escopo=escopo) and fecha_parenteses() and ponto_virgula()
-
+            gerar_cte_impressao_chamada(token_atual[0], lista, i_token, identacao=identacao)
             return retorno
-        elif  (identificador(opcional=True, escopo=escopo, checar_termo=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and fecha_parenteses() and ponto_virgula():
+        elif (numero_inteiro(opcional=True) and fecha_parenteses() and ponto_virgula()):
+            gerar_cte_impressao_literal(lista, i_token, identacao=identacao)
             return True
+        elif booleano(opcional=True) and fecha_parenteses() and ponto_virgula():
+            gerar_cte_impressao_booleano(lista, i_token, identacao=identacao)
+            return True
+        elif (identificador(opcional=True, escopo=escopo, checar_termo=True) and fecha_parenteses() and ponto_virgula()):
+            gerar_cte_impressao_literal(lista, i_token, identacao=identacao)
+            return True
+
+            
     
     return False
 

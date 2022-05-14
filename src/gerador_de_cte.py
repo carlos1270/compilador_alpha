@@ -330,3 +330,50 @@ def gerar_cte_fim_while(labels, identacao=False):
 
     file.write(ident + "goto " + str(labels[0]) + "\n")
     file.write(ident + str(labels[1]) + ":\n")
+
+def gerar_cte_impressao_chamada(nome_funcao, lista, i_token, identacao=False):
+    ident = ''
+    parametros = []
+    if identacao:
+        ident = "    "
+
+    i = i_token
+    while(lista[i][0] != nome_funcao):
+        if (lista[i][0] != '(' and lista[i][0] != ',' and lista[i][0] != ')' and lista[i][0] != ';' and lista[i-1][0] != '='):
+            parametros.append(lista[i][0])
+        i -= 1
+
+    for i in parametros:
+        file.write(ident + "param " + str(i) + ";\n")
+    
+    var = gerar_var_temp()
+    file.write(ident + str(var) + " := call " + nome_funcao + ", " + str(len(parametros)) + ";\n")
+    file.write(ident + "Print " + str(var) + ";\n")
+
+def gerar_cte_impressao_literal(lista, i_token, identacao=False):
+    ident = ''
+    if identacao:
+        ident = "    "
+
+    i = i_token
+    while(lista[i][0] != 'exibir'):
+        if (lista[i][0] != '(' and lista[i][0] != ')' and lista[i][0] != ';'):
+            literal = lista[i][0]
+            break
+        i -= 1
+
+    file.write(ident + "Print " + str(literal) + ";\n")
+
+def gerar_cte_impressao_booleano(lista, i_token, identacao=False):
+    ident = ''
+    if identacao:
+        ident = "    "
+
+    i = i_token
+    while(lista[i][0] != 'exibir'):
+        if (lista[i][0] != '(' and lista[i][0] != ')' and lista[i][0] != ';'):
+            booleano = lista[i][0]
+            break
+        i -= 1
+
+    file.write(ident + "Print " + str(gerar_boolean(booleano)) + ";\n")
