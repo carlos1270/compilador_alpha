@@ -24,12 +24,16 @@ prog ads2a;
     }
 
     
-    se(t > x e verdadeiro != falso){
+    se(t > x e verdadeiro){
         exibir(t);
     }
 
-    se(x > verdadeiro){
+    se(verdadeiro){
         exibir(x);
+    }
+
+    enquanto(3 > 4){
+        exibir(10);
     }
 
     ret = 1;

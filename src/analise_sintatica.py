@@ -194,7 +194,8 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, comando_
         
     if(eh_expressao_booleana):
         if(not checar_se_variavel_booleana(variaveis_semanticas, token, escopo=escopo)):
-            raise VariavelNumericaEmOperacaoBoolenaException("Variável '" + token[0] + "' é do tipo inteiro em uma operação booleana na linha " + token[1])
+            if(ler_proximo_token() == ')' or ler_proximo_token() == ';'):
+                raise VariavelNumericaEmOperacaoBoolenaException("Variável '" + token[0] + "' é do tipo inteiro em uma operação booleana na linha " + token[1])
     
     global tipo_retorno_expressao
     if(tipo_retorno_expressao[1]):
@@ -500,16 +501,27 @@ def comando(token=None, bloco_interno_funcao_retorno=False, comando_enquanto=Fal
 def comando_condicional_if(bloco_interno_funcao_retorno=False, comando_enquanto=False, escopo=None):
     novo_bloco = escopo[:len(escopo)-1-len((escopo[::-1][:escopo[::-1].index(":")]))]+':'+str(int((escopo[::-1][:escopo[::-1].index(":")])[::-1])+1)
     local_token = ler_token_atual()
-    if (abre_parenteses() and expressao_booleana(escopo=escopo) and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()):
-
-        proximo_token = ler_proximo_token()
-
-        if(proximo_token[0] == 'senao'):
-            proximo_token = ler_token()
-            return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
+    if (abre_parenteses() and expressao_booleana(escopo=escopo)):
+        global tipo_retorno_expressao
+        if(Variavel.BOLEANO != tipo_retorno_expressao[0]):
+            tipo_retorno_expressao = [None, True]
+            raise ValorDaExpressaoNaoBooleanaException("A expressão para o comando se precisa ser booleana na linha " + local_token[1])
         else:
-            return True
+            tipo_retorno_expressao = [None, True]
+            if(fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()):
+                proximo_token = ler_proximo_token()
+
+                if(proximo_token[0] == 'senao'):
+                    proximo_token = ler_token()
+                    return comando_condicional_else(bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=novo_bloco)
+                else:
+                    tipo_retorno_expressao = [None, True]
+                    return True
+            else:
+                tipo_retorno_expressao = [None, True]
+                raise ComandoCondicionalIfException("Comando condicional '" + local_token[0] + "' inválido na linha " + local_token[1])
     else:
+        tipo_retorno_expressao = [None, True]
         raise ComandoCondicionalIfException("Comando condicional '" + local_token[0] + "' inválido na linha " + local_token[1])
         
 
@@ -549,7 +561,7 @@ def expressao_booleana(opcional=False, escopo=None):
         token_opcional = ler_proximo_token()
 
         if (token_opcional[0] == "e" or token_opcional[0] == "ou"):
-            return operador_opcional(escopo=escopo, eh_expressao_booleana=False)
+            return operador_opcional(escopo=escopo, eh_expressao_booleana=True)
         elif (token_opcional[0] == ')'):
             return True
         elif(sinal(token_opcional)):
@@ -688,7 +700,22 @@ def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquant
     return abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=comando_enquanto, escopo=escopo) and fecha_chaves()
 
 def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None):
-    return abre_parenteses() and expressao_booleana(escopo=escopo) and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo) and fecha_chaves()
+    local_token = ler_token_atual()
+    if(abre_parenteses() and expressao_booleana(escopo=escopo)):
+        global tipo_retorno_expressao
+        if(Variavel.BOLEANO != tipo_retorno_expressao[0]):
+            tipo_retorno_expressao = [None, True]
+            raise ValorDaExpressaoNaoBooleanaException("A expressão para o comando enquanto precisa ser booleana na linha " + local_token[1])
+        else:
+            if(fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo) and fecha_chaves()):
+                tipo_retorno_expressao = [None, True]
+                return True
+            else:
+                tipo_retorno_expressao = [None, True]
+                return False
+    else:
+        tipo_retorno_expressao = [None, True]
+        return False
 
 def comando_de_retorno_de_valor(escopo=None):
     global variaveis_semanticas, simbolos, funcoes_semanticas

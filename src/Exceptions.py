@@ -188,3 +188,7 @@ class RelacaoEntreTermosDeTiposDiferentesException(AnaliseSemanticaException):
 class ValorDaExpressaoDiferenteDoTipoDaAtribuicaoException(AnaliseSemanticaException):
     def __init__(self, message):
         super().__init__(message)
+
+class ValorDaExpressaoNaoBooleanaException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
