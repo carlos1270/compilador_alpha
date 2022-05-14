@@ -183,4 +183,8 @@ class RelacaoNumericaEntreTermosNaoInteirosException(AnaliseSemanticaException):
 
 class RelacaoEntreTermosDeTiposDiferentesException(AnaliseSemanticaException):
     def __init__(self, message):
-        super().__init__(message) 
+        super().__init__(message)
+
+class ValorDaExpressaoDiferenteDoTipoDaAtribuicaoException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)

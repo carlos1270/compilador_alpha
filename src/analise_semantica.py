@@ -10,11 +10,11 @@ def adicionar_variavel(variaveis, token, tipo, simbolo):
 
     variaveis.add(variavel)
 
-def checar_comando_atribuicao_semantica(variaveis, token):
-    checar_declaracao_semantica(variaveis, token)
+def checar_comando_atribuicao_semantica(variaveis, token, escopo=None):
+    checar_declaracao_semantica(variaveis, token, escopo=escopo)
 
-def checar_declaracao_semantica(variaveis, token):
-    if not variaveis.exists(token[0]):
+def checar_declaracao_semantica(variaveis, token, escopo=None):
+    if variaveis.ultima_mesmo_escopo(escopo, token[0]) == None:
         raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' não declarada na linha " + token[1])
 
 def mesmo_escopo(variaveis, token, simbolo, funcao=False, funcoes_semanticas=None):
@@ -199,3 +199,9 @@ def checar_se_variavel_booleana(variaveis, token, escopo):
             return True
     return False
     
+def checar_tipo_expressao_atribuicao(variaveis, token, escopo, tipo_expressao):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+    if(variavel != None):
+        if variavel.tipo == tipo_expressao[0]:
+            return True
+    return False
