@@ -612,7 +612,13 @@ def comando_condicional_else(bloco_interno_funcao_retorno=False, comando_enquant
     return retorno
 
 def comando_de_laco_while(bloco_interno_funcao_retorno=False, escopo=None, identacao=False):
-    return abre_parenteses() and expressao_booleana() and fecha_parenteses() and abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo, identacao=identacao) and fecha_chaves()
+    global lista, i_token
+
+    expressao_bool = abre_parenteses() and expressao_booleana() and fecha_parenteses()
+    gerar_cte_expressao_while(lista, i_token, identacao=identacao)
+    bloco_while = abre_chaves() and bloco(bloco_interno=True, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_enquanto=True, escopo=escopo, identacao=identacao) and fecha_chaves()
+    gerar_cte_fim_while(identacao=identacao)
+    return expressao_bool and bloco_while
 
 def comando_de_retorno_de_valor():
     global variaveis_semanticas, simbolos, funcoes_semanticas

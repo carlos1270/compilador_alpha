@@ -13,8 +13,11 @@ prog ads2a;
         }senao{ 
             retorno b; 
         }
-        
-        ret = a + b * 10 + 2 / 2;
+        x = 10;
+        enquanto (x > 0) {
+            x = x - 1;
+        }
+        ret = a + b * 10 + 2 / x;
         retorno ret; 
     }
 

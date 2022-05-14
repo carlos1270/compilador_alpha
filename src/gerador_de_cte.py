@@ -211,7 +211,6 @@ def gerar_inicio_cte_if(lista, i_token, identacao=False):
             expressao.append(lista[i][0])
         i -= 1
     expressao = list(reversed(expressao))
-    print("---------------------------- CTE IF", expressao)
 
     labels = gerar_label_if()
     salvar_labels(labels)
@@ -272,3 +271,68 @@ def gerar_label_externo_if(identacao=False):
         ident = "    "
 
     file.write(ident + str(l[1])+":\n")
+
+
+def gerar_cte_expressao_while(lista, i_token, identacao=False):
+    ident = ''
+    if identacao:
+        ident = "    "
+    i = i_token
+    expressao = []
+    while(lista[i][0] != 'enquanto'):
+        if ((lista[i][0] != ')') and (lista[i][0] != '(')):
+            expressao.append(lista[i][0])
+        i -= 1
+    expressao = list(reversed(expressao))
+    
+    labels = gerar_label_if()
+    salvar_labels(labels)
+    if (len(expressao) == 1):        
+        file.write(ident + str(labels[0]) + ": if !" + gerar_boolean(expressao[0]) + " goto " + str(labels[1])+"\n")
+    elif (len(expressao) > 1):
+        var_temp = None
+        while(len(expressao) > 1):
+            var = gerar_var_temp()
+            comparacao = tem_comparacao(expressao)
+            if comparacao: 
+                for s in range(len(expressao)):
+                    if (((expressao[s] == '<') or (expressao[s] == '>') or (expressao[s] == '>=') or (expressao[s] == '<=') or (expressao[s] == '==') or (expressao[s] == '!=')) and (expressao[s+1] != 'nao')):
+                        file.write(ident + str(var) + " := " + str(expressao[s-1]) + " " + str(expressao[s]) + " " + str(expressao[s+1]) +";\n")
+                        expressao = gerar_novas_expressoes(expressao, s-1, var)
+                        break
+            else:
+                tem_and = tem_e(expressao)
+                if tem_and:
+                    for s in range(len(expressao)):
+                        if ((expressao[s] == 'e') and (expressao[s+1] != 'nao')):
+                            file.write(ident + str(var) + " := " + str(expressao[s-1]) + " && " + str(expressao[s+1]) +";\n")
+                            expressao = gerar_novas_expressoes(expressao, s-1, var)
+                            break
+                else:
+                    tem_or = tem_ou(expressao)
+                    if tem_or:
+                        for s in range(len(expressao)):
+                            if ((expressao[s] == 'ou') and (expressao[s+1] != 'nao')):
+                                file.write(ident + str(var) + " := " + str(expressao[s-1]) + " || " + str(expressao[s+1]) +";\n")
+                                expressao = gerar_novas_expressoes(expressao, s-1, var)
+                                break
+                    else:
+                        for s in range(len(expressao)):
+                            if ((expressao[s-1] == 'nao')):
+                                file.write(ident + str(var) + " := !" + str(expressao[s]) + ";\n")
+                                expressao = gerar_novas_expressoes(expressao, s-1, var, nao=True)
+                                break
+
+            var_temp = var
+
+        file.write(ident + str(labels[0]) + ": if !" + var_temp + " goto " + str(labels[1])+"\n")
+
+def gerar_cte_fim_while(identacao=False):
+    global l
+
+    ident = ''
+    if identacao:
+        ident = "    "
+
+    file.write(ident + "goto " + str(l[0]) + "\n")
+    file.write(ident + str(l[1]) + ":\n")
