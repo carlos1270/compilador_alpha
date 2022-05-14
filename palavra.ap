@@ -8,9 +8,10 @@ prog ads2a;
     func inteiro teste(inteiro a, inteiro b){
         inteiro ret;
         inteiro x;
+        booleano q;
         se(a > b e b > 10){
             se (b < 2) {
-                a = nao a > b e b >= 10;
+                q = nao a > b e b >= 10;
             }
         }senao{ 
             retorno b; 

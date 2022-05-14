@@ -27,6 +27,9 @@ class Variavel:
         elif (tipo == 'booleano'):
             return Variavel.BOLEANO
 
+    def set_valor(self, valor):
+        self.valor = valor
+
 class VariavelHash:
     def __init__(self):
         self.variaveis = []
@@ -73,6 +76,8 @@ class VariavelHash:
 
     def ultima_mesmo_escopo(self, escopo, nome):
         ultima = None
+        """ print("--------------------------- ULTIMA ", escopo)
+        print("--------------------------- ULTIMA ", nome) """
         for i in range(len(self.variaveis)):
             if (self.variaveis[i].nome == nome):
                 variavel = self.variaveis[i]
@@ -80,7 +85,7 @@ class VariavelHash:
                 escopo_desejado = escopo.split(':')
 
                 if(len(escopo_variavel) <= len(escopo_desejado)):
-                    if ((escopo_variavel[:] == escopo_desejado[:len(escopo_variavel)]) or (len(escopo_desejado) == len(escopo_variavel)) and escopo_variavel[0] == '1'):
+                    if (escopo_variavel[:] == escopo_desejado[:len(escopo_variavel)]) or (len(escopo_desejado) == len(escopo_variavel) and escopo_variavel[0] == '1') or (len(escopo_variavel) == 2 and escopo_desejado[1] >= escopo_variavel[1]):
                         ultima = variavel
 
         return ultima

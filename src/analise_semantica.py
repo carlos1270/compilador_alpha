@@ -10,11 +10,11 @@ def adicionar_variavel(variaveis, token, tipo, simbolo):
 
     variaveis.add(variavel)
 
-def checar_comando_atribuicao_semantica(variaveis, token):
-    checar_declaracao_semantica(variaveis, token)
+def checar_comando_atribuicao_semantica(variaveis, token, escopo=None):
+    checar_declaracao_semantica(variaveis, token, escopo=escopo)
 
-def checar_declaracao_semantica(variaveis, token):
-    if not variaveis.exists(token[0]):
+def checar_declaracao_semantica(variaveis, token, escopo=None):
+    if variaveis.ultima_mesmo_escopo(escopo, token[0]) == None:
         raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' não declarada na linha " + token[1])
 
 def mesmo_escopo(variaveis, token, simbolo, funcao=False, funcoes_semanticas=None):
@@ -140,7 +140,7 @@ def checar_quantidade_parametros_passados(funcoes, nome_funcao, paramentros):
     funcao = funcoes.get_funcao(nome_funcao)
 
     if len(funcao.parametros) != len(paramentros):
-        raise QuantidadeParametrosDiferenteExeception("A função '" + nome_funcao + "' espera " + str(len(funcao.parametros)) + " parâmetros, mas foram pegos " + str(len(paramentros)))
+        raise QuantidadeParametrosDiferenteExeception("A função '" + nome_funcao + "' espera " + str(len(funcao.parametros)) + " parâmetros, mas " + str(len(paramentros)) + " foram passados")
 
 def parametros_funcao(nome_funcao, i_token, lista):
     parametros = []
@@ -183,3 +183,25 @@ def checar_tipo_constante_variavel(simbolo, variaveis, escopo, token_variavel):
 def checar_procedimento_declarado(funcoes, token):
     if not funcoes.exists_procedimento(token[0]):
         raise FuncaoNaoDeclaradaException("Procedimento '" + token[0] + "' não declarado na linha " + token[1])
+
+def checar_se_variavel_numerica(variaveis, token, escopo):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+    if(variavel != None):
+        if variavel.tipo == Variavel.INTEGER:
+            return True
+
+    return False
+
+def checar_se_variavel_booleana(variaveis, token, escopo):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+    if(variavel != None):
+        if variavel.tipo == Variavel.BOLEANO:
+            return True
+    return False
+    
+def checar_tipo_expressao_atribuicao(variaveis, token, escopo, tipo_expressao):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+    if(variavel != None):
+        if variavel.tipo == tipo_expressao[0]:
+            return True
+    return False
