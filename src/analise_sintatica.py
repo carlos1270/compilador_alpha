@@ -659,9 +659,13 @@ def comandos_de_desvio_incondicional():
     return ponto_virgula()
 
 def comando_impressao_tela():
+    global lista, i_token
+
     if (abre_parenteses()):
         if (checar_chamada(opcional=True)):
-            return chamada() and fecha_parenteses() and ponto_virgula()
+            retorno = chamada(lista[i_token][0]) and fecha_parenteses() and ponto_virgula()
+
+            return retorno
         elif (identificador(opcional=True) or numero_inteiro(opcional=True) or booleano(opcional=True)) and fecha_parenteses() and ponto_virgula():
             return True
     

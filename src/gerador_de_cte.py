@@ -328,5 +328,5 @@ def gerar_cte_fim_while(labels, identacao=False):
     if identacao:
         ident = "    "
 
-    file.write(ident + "goto " + str(l[0]) + "\n")
-    file.write(ident + str(l[1]) + ":\n")
+    file.write(ident + "goto " + str(labels[0]) + "\n")
+    file.write(ident + str(labels[1]) + ":\n")

@@ -80,7 +80,7 @@ class VariavelHash:
                 escopo_desejado = escopo.split(':')
 
                 if(len(escopo_variavel) <= len(escopo_desejado)):
-                    if (escopo_variavel[:] == escopo_desejado[:len(escopo_variavel)]) or (len(escopo_desejado) == len(escopo_variavel) and escopo_variavel[0] == '1'):
+                    if ((escopo_variavel[:] == escopo_desejado[:len(escopo_variavel)]) or (len(escopo_desejado) == len(escopo_variavel)) and escopo_variavel[0] == '1'):
                         ultima = variavel
 
         return ultima
