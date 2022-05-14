@@ -76,8 +76,6 @@ class VariavelHash:
 
     def ultima_mesmo_escopo(self, escopo, nome):
         ultima = None
-        """ print("--------------------------- ULTIMA ", escopo)
-        print("--------------------------- ULTIMA ", nome) """
         for i in range(len(self.variaveis)):
             if (self.variaveis[i].nome == nome):
                 variavel = self.variaveis[i]

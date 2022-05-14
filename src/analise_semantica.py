@@ -147,16 +147,19 @@ def parametros_funcao(nome_funcao, i_token, lista):
     i = i_token
     while (lista[i][0] != nome_funcao):
         if (lista[i][0] != ',' and lista[i][0] != '(' and lista[i][0] != ')'):
-            parametros.append(lista[i][0])
+            parametros.append(lista[i])
         i -= 1
     parametros = list(reversed(parametros))
     return parametros
 
-def checar_tipos_paramentros_passados(variaveis, funcoes, nome_funcao, paramentros):
+def checar_tipos_paramentros_passados(variaveis, funcoes, nome_funcao, paramentros, escopo):
     funcao = funcoes.get_funcao(nome_funcao)
-
     for i in range(len(funcao.parametros)):
-        variavel = variaveis.ultima_mesmo_escopo(funcao.lexval.escopo, paramentros[i])
+        variavel = variaveis.ultima_mesmo_escopo(escopo, paramentros[i][0])
+        
+        if variavel == None:
+            raise VariavelNaoDeclaradaException("Parâmetro '" + paramentros[i][0] + "' não declarado na linha " + str(paramentros[i][0] + "."))
+
         if Funcao.get_tipo(funcao.parametros[i].tipo) != variavel.tipo:
             raise TipoDeParametroDiferenteExeception("Parâmetro '" + funcao.parametros[i].identificador + "' deve ser do tipo " + funcao.parametros[i].tipo + ", mas foi passado um " + variavel.to_string_tipo())
 

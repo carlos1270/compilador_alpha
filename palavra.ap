@@ -27,7 +27,7 @@ prog ads2a;
     func vazio procedi(inteiro a) {
         inteiro c;
         inteiro d;
-        exibir(teste(c, d););
+        exibir(teste(c, d));
         a = c;
     }
 

@@ -202,7 +202,6 @@ def identificador(token=None, opcional=False, tipo=None, comando=False, comando_
     
     global tipo_retorno_expressao
     if(tipo_retorno_expressao[1]):
-        print("--------------------------- IDENTIFICADOR ", escopo)
         variavel = variaveis_semanticas.ultima_mesmo_escopo(escopo, token[0])
         if(variavel != None):
             tipo_retorno_expressao[0] = variavel.tipo
@@ -810,13 +809,14 @@ def comando_impressao_tela(escopo=None):
 def comando_de_atribuicao(identacao=False, escopo=None):
     global variaveis_semanticas, funcoes_semanticas, lista, i_token
     token_atual = ler_token_atual()
+    
     if (atribuicao()):
         if (checar_chamada(opcional=True, escopo=escopo)):
             token_atual = ler_token_atual()
             checar_funcao(funcoes_semanticas, token_atual)
             checar_declaracao_variavel_escopo(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             checar_tipo_funcao_atribuicao(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
-            retorno = chamada(token_atual[0]) and ponto_virgula()
+            retorno = chamada(token_atual[0], escopo=escopo) and ponto_virgula()
             gerar_cte_chamada_atribuicao(lista, i_token, identacao=identacao)
             return retorno
         else:
@@ -933,7 +933,7 @@ def chamada(nome_funcao, procedimento=False, escopo=None):
 
     retorno = abre_parenteses() and secao_parametros_passados(escopo=escopo) and fecha_parenteses()
     checar_quantidade_parametros_passados(funcoes_semanticas, nome_funcao, parametros_funcao(nome_funcao, i_token, lista))
-    checar_tipos_paramentros_passados(variaveis_semanticas, funcoes_semanticas, nome_funcao, parametros_funcao(nome_funcao, i_token, lista))
+    checar_tipos_paramentros_passados(variaveis_semanticas, funcoes_semanticas, nome_funcao, parametros_funcao(nome_funcao, i_token, lista), escopo)
     return retorno
 
 def secao_parametros_passados(escopo=None):
