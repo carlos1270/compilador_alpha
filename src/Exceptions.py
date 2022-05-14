@@ -164,3 +164,31 @@ class TipoDeParametroDiferenteExeception(AnaliseSemanticaException):
 class TipoAtribuicaoConstanteException(AnaliseSemanticaException):
     def __init__(self, message):
         super().__init__(message) 
+
+class VariavelNaoNumericaEmExpressaoNumericaException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class VariavelNumericaEmOperacaoBoolenaException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ValorNumericoEmOperacaoBoolenaException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class RelacaoNumericaEntreTermosNaoInteirosException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class RelacaoEntreTermosDeTiposDiferentesException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ValorDaExpressaoDiferenteDoTipoDaAtribuicaoException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
+
+class ValorDaExpressaoNaoBooleanaException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)

@@ -24,6 +24,16 @@ prog ads2a;
     }
 
     
-    a = test(t);
+    se(t > x e verdadeiro){
+        exibir(t);
+    }
+
+    se(verdadeiro){
+        exibir(x);
+    }
+
+    enquanto(3 > 4){
+        exibir(10);
+    }
 
     ret = 1;
