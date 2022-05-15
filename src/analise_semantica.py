@@ -44,9 +44,12 @@ def mesmo_escopo(variaveis, token, simbolo, funcao=False, funcoes_semanticas=Non
     
     return False 
 
-def checar_ja_declarada(variaveis, token, simbolo, funcoes_semanticas=None, funcao=False):
+def checar_ja_declarada(variaveis, token, simbolo, funcoes_semanticas=None, funcao=False, mutavel=False):
     if variaveis.exists(token[0]) and mesmo_escopo(variaveis, token, simbolo, funcao=funcao, funcoes_semanticas=funcoes_semanticas):
-        raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' já declarada na linha " + token[1])
+        if(not mutavel):
+            raise VariavelNaoDeclaradaException("Identificador '" + token[0] + "' para constante já declarado na linha " + token[1])
+        else:
+            raise VariavelNaoDeclaradaException("Identificador '" + token[0] + "' para variavel já declarado na linha " + token[1])
 
 def adicionar_funcao(funcoes, token, tipo, simbolo):
     funcao = None
@@ -208,3 +211,9 @@ def checar_tipo_expressao_atribuicao(variaveis, token, escopo, tipo_expressao):
         if variavel.tipo == tipo_expressao[0]:
             return True
     return False
+
+def atribuicao_semantica(variaveis, token, escopo):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+    if(variavel != None):
+        variavel.set_valor(True)
+        variavel.lexval.valor = True

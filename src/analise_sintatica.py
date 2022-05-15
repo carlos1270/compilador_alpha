@@ -283,7 +283,7 @@ def bloco(bloco_interno=False, bloco_interno_funcao_retorno=False, comando_enqua
 def declaracao_de_constante(escopo=None, bloco_interno_funcao_retorno=None):
     global token 
     token_local = token
-    if (tipo() and definicao_constante(escopo=escopo) and ponto_virgula()):
+    if (tipo() and definicao_constante(escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno) and ponto_virgula()):
         return True
     else:
         raise DeclaracaoDeConstateException("Constante '" + token_local[0] + "' declarada de forma inválida na linha " + token_local[1])
@@ -297,9 +297,15 @@ def tipo():
     else:
         raise TipoConstanteInvalidoException("Tipo de dado '" + token[0] + "' inválido na linha " + token[1])
 
-def definicao_constante(escopo=None):
+def definicao_constante(escopo=None, bloco_interno_funcao_retorno=False):
     
-    if (identificador(escopo=escopo, mutavel=False) and atribuicao() and constante(escopo=escopo)):
+    token_local = ler_proximo_token()
+    tipo = ler_token_atual()
+    if (identificador(escopo=escopo, mutavel=False, comando_declaracao=True) and atribuicao() and constante(escopo=escopo)):
+        if(not bloco_interno_funcao_retorno):
+            checar_ja_declarada(variaveis_semanticas, token_local, simbolos[len(simbolos) - 1], mutavel=False)
+        adicionar_variavel(variaveis_semanticas, token_local, tipo, simbolos[len(simbolos) - 1])
+        atribuicao_semantica(variaveis_semanticas, token_local, escopo=escopo)
         return True
     else:
         return False
@@ -369,6 +375,7 @@ def declaracao_de_variavel(escopo=None, bloco_interno_funcao_retorno=False):
     if (identificador(escopo=escopo, bloco_interno_funcao_retorno=bloco_interno_funcao_retorno, comando_declaracao=True)):
         if (ponto_virgula()):
             if(not bloco_interno_funcao_retorno):
+                print(ler_token_anterior())
                 checar_ja_declarada(variaveis_semanticas, ler_token_anterior(), simbolos[len(simbolos) - 1])
             adicionar_variavel(variaveis_semanticas, ler_token_anterior(), ler_token_tipo_variavel(), simbolos[len(simbolos) - 1])
             return True
@@ -836,6 +843,7 @@ def comando_de_atribuicao(identacao=False, escopo=None):
             checar_declaracao_variavel_escopo(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             checar_tipo_funcao_atribuicao(variaveis_semanticas, funcoes_semanticas, lista[i_token - 2], token_atual)
             retorno = chamada(token_atual[0], escopo=escopo) and ponto_virgula()
+            atribuicao_semantica(variaveis_semanticas, token_atual, escopo=escopo)
             gerar_cte_chamada_atribuicao(lista, i_token, identacao=identacao)
             return retorno
         else:
@@ -844,6 +852,7 @@ def comando_de_atribuicao(identacao=False, escopo=None):
                 if(checar_tipo_expressao_atribuicao(variaveis_semanticas, token_atual, escopo=escopo, tipo_expressao=tipo_retorno_expressao)):
                     tipo_retorno_expressao = [None, True]
                     retorno = ponto_virgula()
+                    atribuicao_semantica(variaveis_semanticas, token_atual, escopo=escopo)
                     gerar_cte_expressao_atribuicao(lista, i_token, identacao=identacao)
                     return retorno
                 else:

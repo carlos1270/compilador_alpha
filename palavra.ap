@@ -1,9 +1,10 @@
 prog ads2a;
 
     inteiro t;
+    inteiro a;
     booleano ret;
     inteiro x;
-    const inteiro a = t;
+    const inteiro b = t;
 
     func inteiro teste(inteiro a, inteiro b){
         inteiro ret;
