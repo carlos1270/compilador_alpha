@@ -74,8 +74,17 @@ class VariavelHash:
                 ultima = self.variaveis[i]
         return ultima
 
-    def ultima_mesmo_escopo(self, escopo, nome):
+    def ultima_mesmo_escopo(self, escopo, nome, funcoes=None):
         ultima = None
+        dentro_de_funcao = False
+        if(funcoes!=None):
+            ultima_funcao = funcoes.last()
+            if(ultima_funcao != None):
+                escopo_funcao = ultima_funcao.lexval.escopo.split(':')
+                escopo_desejado = escopo.split(':')
+                if(escopo_funcao[:] == escopo_desejado[:len(escopo_funcao)] and len(escopo_desejado)>len(escopo_funcao)):
+                    dentro_de_funcao = True
+
         for i in range(len(self.variaveis)):
             if (self.variaveis[i].nome == nome):
                 variavel = self.variaveis[i]
@@ -83,7 +92,9 @@ class VariavelHash:
                 escopo_desejado = escopo.split(':')
 
                 if(len(escopo_variavel) <= len(escopo_desejado)):
-                    if (escopo_variavel[:] == escopo_desejado[:len(escopo_variavel)]) or (len(escopo_desejado) == len(escopo_variavel) and escopo_variavel[0] == '1') or (len(escopo_variavel) == 2 and escopo_desejado[1] >= escopo_variavel[1]):
+                    if(dentro_de_funcao and len(escopo_variavel) == 2 and len(escopo_desejado) > 2):
+                        continue
+                    if(escopo_variavel[:] == escopo_desejado[:len(escopo_variavel)]) or (len(escopo_desejado) == len(escopo_variavel) and escopo_variavel[0] == '1') or (len(escopo_desejado)-1 == len(escopo_variavel) and (escopo_variavel[:len(escopo_variavel)-1] == escopo_desejado[:len(escopo_variavel)-1])):
                         ultima = variavel
 
         return ultima

@@ -192,3 +192,7 @@ class ValorDaExpressaoDiferenteDoTipoDaAtribuicaoException(AnaliseSemanticaExcep
 class ValorDaExpressaoNaoBooleanaException(AnaliseSemanticaException):
     def __init__(self, message):
         super().__init__(message)
+
+class VariavelOuConstanteNecessitaDeValorAtribuidoException(AnaliseSemanticaException):
+    def __init__(self, message):
+        super().__init__(message)
