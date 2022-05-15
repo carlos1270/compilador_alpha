@@ -13,8 +13,8 @@ def adicionar_variavel(variaveis, token, tipo, simbolo):
 def checar_comando_atribuicao_semantica(variaveis, token, escopo=None):
     checar_declaracao_semantica(variaveis, token, escopo=escopo)
 
-def checar_declaracao_semantica(variaveis, token, escopo=None):
-    if variaveis.ultima_mesmo_escopo(escopo, token[0]) == None:
+def checar_declaracao_semantica(variaveis, token, escopo=None, funcoes=None):
+    if variaveis.ultima_mesmo_escopo(escopo, token[0], funcoes=funcoes) == None:
         raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' não declarada na linha " + token[1])
 
 def mesmo_escopo(variaveis, token, simbolo, funcao=False, funcoes_semanticas=None):
@@ -44,9 +44,12 @@ def mesmo_escopo(variaveis, token, simbolo, funcao=False, funcoes_semanticas=Non
     
     return False 
 
-def checar_ja_declarada(variaveis, token, simbolo, funcoes_semanticas=None, funcao=False):
+def checar_ja_declarada(variaveis, token, simbolo, funcoes_semanticas=None, funcao=False, mutavel=False):
     if variaveis.exists(token[0]) and mesmo_escopo(variaveis, token, simbolo, funcao=funcao, funcoes_semanticas=funcoes_semanticas):
-        raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' já declarada na linha " + token[1])
+        if(not mutavel):
+            raise VariavelNaoDeclaradaException("Identificador '" + token[0] + "' para constante já declarado na linha " + token[1])
+        else:
+            raise VariavelNaoDeclaradaException("Identificador '" + token[0] + "' para variavel já declarado na linha " + token[1])
 
 def adicionar_funcao(funcoes, token, tipo, simbolo):
     funcao = None
@@ -124,14 +127,14 @@ def varificar_tipo_retorno_funcao(variaveis, token, funcoes):
 
 def checar_tipo_funcao_atribuicao(variaveis, funcoes, token_variavel, token_funcao):
     funcao = funcoes.get_funcao(token_funcao[0])
-    variavel = variaveis.ultima_mesmo_escopo(funcao.lexval.escopo, token_variavel[0])
+    variavel = variaveis.ultima_mesmo_escopo(funcao.lexval.escopo, token_variavel[0], funcoes=funcoes)
 
     if (funcao.tipo != variavel.tipo):
         raise RetornoFuncaoTipoVariavelException("A função '" + funcao.nome + "' retorna um " + funcao.to_string_tipo() + " mas '" + variavel.nome + "' é do tipo " + variavel.to_string_tipo())
 
 def checar_declaracao_variavel_escopo(variaveis, funcoes, token_variavel, token_funcao):
     funcao = funcoes.get_funcao(token_funcao[0])
-    variavel = variaveis.ultima_mesmo_escopo(funcao.lexval.escopo, token_variavel[0])
+    variavel = variaveis.ultima_mesmo_escopo(funcao.lexval.escopo, token_variavel[0], funcoes=funcoes)
 
     if variavel == None:
         raise VariavelNaoDeclaradaException("Variável '" + token_variavel[0] + "' não declarada na linha " + token_variavel[1])
@@ -155,7 +158,7 @@ def parametros_funcao(nome_funcao, i_token, lista):
 def checar_tipos_paramentros_passados(variaveis, funcoes, nome_funcao, paramentros, escopo):
     funcao = funcoes.get_funcao(nome_funcao)
     for i in range(len(funcao.parametros)):
-        variavel = variaveis.ultima_mesmo_escopo(escopo, paramentros[i][0])
+        variavel = variaveis.ultima_mesmo_escopo(escopo, paramentros[i][0], funcoes=funcoes)
         
         if variavel == None:
             raise VariavelNaoDeclaradaException("Parâmetro '" + paramentros[i][0] + "' não declarado na linha " + str(paramentros[i][0] + "."))
@@ -171,14 +174,14 @@ def checar_tipo_constante_inteiro(simbolo):
     if Variavel.INTEGER != Variavel.get_tipo(simbolo.tipo):
         raise TipoAtribuicaoConstanteException("Constante '"+ simbolo.identificador +"' na linha " + str(simbolo.linha) + " é declarada como " + simbolo.tipo + ", mas atribuindo um valor inteiro.")
 
-def checar_variavel_esta_declarada_com_mesmo_escopo(variaveis, escopo, token):
-    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+def checar_variavel_esta_declarada_com_mesmo_escopo(variaveis, escopo, token, funcoes=None):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0], funcoes=funcoes)
 
     if variavel == None:
         raise VariavelNaoDeclaradaException("Variável '" + token[0] + "' não declarada na linha " + token[1])
 
-def checar_tipo_constante_variavel(simbolo, variaveis, escopo, token_variavel):
-    variavel = variaveis.ultima_mesmo_escopo(escopo, token_variavel[0])
+def checar_tipo_constante_variavel(simbolo, variaveis, escopo, token_variavel, funcoes=None):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token_variavel[0], funcoes=funcoes)
 
     if variavel.tipo != Variavel.get_tipo(simbolo.tipo):
         raise TipoAtribuicaoConstanteException("Constante '"+ simbolo.identificador +"' na linha " + str(simbolo.linha) + " é declarada como " + simbolo.tipo + ", mas atribuindo um valor "+ variavel.to_string_tipo() +".")
@@ -187,24 +190,37 @@ def checar_procedimento_declarado(funcoes, token):
     if not funcoes.exists_procedimento(token[0]):
         raise FuncaoNaoDeclaradaException("Procedimento '" + token[0] + "' não declarado na linha " + token[1])
 
-def checar_se_variavel_numerica(variaveis, token, escopo):
-    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+def checar_se_variavel_numerica(variaveis, token, escopo, funcoes=None):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0], funcoes=funcoes)
     if(variavel != None):
         if variavel.tipo == Variavel.INTEGER:
             return True
 
     return False
 
-def checar_se_variavel_booleana(variaveis, token, escopo):
-    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+def checar_se_variavel_booleana(variaveis, token, escopo, funcoes=None):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0], funcoes=funcoes)
     if(variavel != None):
         if variavel.tipo == Variavel.BOLEANO:
             return True
     return False
     
-def checar_tipo_expressao_atribuicao(variaveis, token, escopo, tipo_expressao):
-    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0])
+def checar_tipo_expressao_atribuicao(variaveis, token, escopo, tipo_expressao, funcoes=None):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0], funcoes=funcoes)
     if(variavel != None):
         if variavel.tipo == tipo_expressao[0]:
+            return True
+    return False
+
+def atribuicao_semantica(variaveis, token, escopo, funcoes=None):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0], funcoes=funcoes)
+    if(variavel != None):
+        variavel.set_valor(True)
+        variavel.lexval.valor = True
+
+def checar_valor_semantico(variaveis, token, escopo, funcoes=None):
+    variavel = variaveis.ultima_mesmo_escopo(escopo, token[0], funcoes=funcoes)
+    if(variavel != None):
+        if(variavel.lexval.valor == True):
             return True
     return False

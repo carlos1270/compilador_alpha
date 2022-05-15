@@ -1,14 +1,17 @@
 prog ads2a;
 
     inteiro t;
+    t = 2;
+    inteiro a;
     booleano ret;
-    inteiro x;
-    const inteiro a = t;
+    const inteiro b = t;
 
     func inteiro teste(inteiro a, inteiro b){
         inteiro ret;
         inteiro x;
         booleano q;
+        a = 2;
+        b = 4;
         se(a > b e b > 10){
             se (b < 2) {
                 q = nao a > b e b >= 10;
@@ -28,8 +31,9 @@ prog ads2a;
     func vazio procedi(inteiro a) {
         inteiro c;
         inteiro d;
+        c = 2;
         exibir(c);
         a = c;
     }
 
-    x = teste(x, t);
+    t = teste(x, t);
